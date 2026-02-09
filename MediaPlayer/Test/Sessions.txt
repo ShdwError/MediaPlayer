@@ -1,3 +1,0 @@
-Sessions:[36:975a9e54-15d4-4ef1-ba2e-2f3eeab85a60,65:Sessions\Going Through Hollow Knight & Silksong for Playlists.txt],[36:507fe60b-7a60-408b-9bf7-8f2155bed50c,41:Sessions\Complete Silksong Soundtrack.txt],[36:5b9bedb3-8357-45b7-8f63-4171ea8d7e05,46:Sessions\Complete Hollow Knight Soundtrack.txt],[36:f40498da-3408-4cdf-b6bd-c8c704eb9264,57:Sessions\Complete Hollow Knight & Silksong Soundtrack.txt],[36:2ac93abf-f1b0-48c4-9455-130e2e291ce1,75:Sessions\Complete Hollow Knight Soundtrack+Complete Silksong Soundtrack.txt],[36:ad9fcc4b-81e3-410c-b269-13cb597e9742,29:Sessions\TestHKSoundtrack.txt]
-Current:975a9e54-15d4-4ef1-ba2e-2f3eeab85a60
-/
