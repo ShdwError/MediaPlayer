@@ -7,6 +7,7 @@ public abstract class DataType {
 	}
 	public abstract void setData(String s);
 	public abstract String getData();
+	public abstract DataType instance();
 	public abstract DataType copy();
 	@Override
 	public String toString() {

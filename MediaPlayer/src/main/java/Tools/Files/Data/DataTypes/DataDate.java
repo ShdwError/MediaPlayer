@@ -38,8 +38,12 @@ public class DataDate extends DataType {
 		return data.format(DateTimeFormatter.ISO_DATE_TIME);
 	}
 	@Override
-	public DataDate copy() {
+	public DataDate instance() {
 		return new DataDate(created);
+	}
+	@Override
+	public DataDate copy() {
+		return new DataDate(data);
 	}
 
 }

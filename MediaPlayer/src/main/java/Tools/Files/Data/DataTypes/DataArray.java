@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import Tools.Files.Util;
 import Tools.Files.Data.DataType;
 import Tools.Files.Data.Return2;
-import Tools.Files.Data.Util;
 
 public class DataArray<T extends DataType> extends DataType {
 	private List<T> data;
@@ -58,7 +58,15 @@ public class DataArray<T extends DataType> extends DataType {
 		data.add(dataAdd);
 	}
 	@Override
-	public DataArray<T> copy() {
+	public DataArray<T> instance() {
 		return new DataArray<>(supplier);
+	}
+	@Override
+	public DataArray<T> copy() {
+		DataArray<T> ret = new DataArray<>(supplier);
+		for(T entry: data) {
+			ret.get().add(entry);
+		}
+		return ret;
 	}
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -16,9 +17,9 @@ import org.MediaPlayer.DataTypes.DataPlaylistEntry;
 import Tools.Files.DataSystem;
 import Tools.Files.FileManager;
 import Tools.Files.FileTree;
+import Tools.Files.Util;
 import Tools.Files.Data.DataContainer;
 import Tools.Files.Data.DataType;
-import Tools.Files.Data.Util;
 import Tools.Files.Data.DataTypes.*;
 import javafx.application.Platform;
 import javafx.scene.media.Media;
@@ -81,6 +82,7 @@ public class App {
 		sData.sessions.put(session.id, new DataString(newPath.toString()));
 		try {
 			session.dataContainer.system.changeFileManager(fTree.rename(oldPath, newPath));
+			sDataSystem.save();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -93,6 +95,7 @@ public class App {
 		plData.playlists.put(playlist.id, new DataString(newPath.toString()));
 		try {
 			playlist.dataContainer.system.changeFileManager(fTree.rename(oldPath, newPath));
+			plDataSystem.save();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -109,6 +112,7 @@ public class App {
 			fTree.rename(getSoundtrackInfoPath(oldPath), getSoundtrackInfoPath(newPath));
 			
 			entry.dataContainer.system.changeFileManager(newTrackManager);
+			stDataSystem.save();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -116,9 +120,10 @@ public class App {
 	public void deleteSoundtrack(TrackEntry entry) {
 		try {
 			fTree.remove(entry.path);
-			fTree.remove(getSoundtrackInfoPath(path));
+			fTree.remove(getSoundtrackInfoPath(entry.path));
 			stData.soundtracks.remove(entry.id);
 			soundtracks.remove(entry.id);
+			stDataSystem.save();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -128,6 +133,8 @@ public class App {
 			fTree.remove(playlist.path);
 			plData.playlists.remove(playlist.id);
 			playlists.remove(playlist.id);
+			plDataSystem.save();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -140,6 +147,7 @@ public class App {
 			fTree.remove(session.path);
 			sData.sessions.remove(session.id);
 			sessions.remove(session.id);
+			sDataSystem.save();
 		} catch (IOException e) {
 				e.printStackTrace();
 		}
@@ -163,7 +171,9 @@ public class App {
 		mediaPlayer.setOnError(() -> System.out.println("MediaPlayer Error: " + mediaPlayer.getError()));
 	    media.setOnError(() -> System.out.println("Media Error: " + media.getError()));
 		mediaPlayer.setOnReady(() -> {
-		    System.out.println("Playtime: " + ui.getLengthString(entry.length.get()));
+			int length = (int) media.getDuration().toSeconds();
+			entry.length.set(length);
+		    System.out.println("Playtime: " + UtilFunctions.getLengthString(length));
 		    mediaPlayer.play();
 		});
 		
@@ -197,13 +207,13 @@ public class App {
 	public void playNextTrack() {
 		currentSession.lastOpened.set(LocalDateTime.now());
 		
-		if(mediaPlayer == null) return;
+		if(mediaPlayer == null || currentSession == null) return;
+			
 		// TODO: Loop Amount
 		DataPlaylistEntry dpe = currentSession.getNext();
 		
-		
 		if(dpe == null) {
-			stopSession();
+			deleteSession(currentSession);
 			System.out.println("End of Playlist");
 			return;
 		}
@@ -225,9 +235,69 @@ public class App {
 			playNextTrack();
 		}
 	}
+	public void moveToSessionPos(int pos) {
+		currentSession.lastOpened.set(LocalDateTime.now());
+		
+		if(mediaPlayer == null || currentSession == null) return;
+		
+		DataPlaylistEntry dpe = currentSession.moveTo(pos);
+		
+		if(dpe == null) {
+			System.out.println("Out of Bounds");
+			return;
+		}
+		System.out.println("Play Track " + pos);
+		
+		ui.printPlaylistPreview();
+		
+		TrackEntry entry = soundtracks.get(dpe.id.get());
+		if(entry != null) {
+			playSoundtrack(entry);
+			
+			mediaPlayer.setOnEndOfMedia(() -> {
+			    Platform.runLater(this::playNextTrack);
+			});
+		}
+		else {
+			System.out.println("Soundtrack " + dpe.id + " not found");
+			playNextTrack();
+		}
+		
+	}
+	public void playPreviousTrack() {
+		currentSession.lastOpened.set(LocalDateTime.now());
+		
+		if(mediaPlayer == null) return;
+		// TODO: Loop Amount
+		DataPlaylistEntry dpe = currentSession.getPrevious();
+		
+		if(dpe == null) {
+			System.out.println("Beginning of Playlist");
+			return;
+		}
+		
+		System.out.println("Playing Track " + currentSession.pos.get());
+		
+		ui.printPlaylistPreview();
+		
+		TrackEntry entry = soundtracks.get(dpe.id.get());
+		if(entry != null) {
+			playSoundtrack(entry);
+			
+			mediaPlayer.setOnEndOfMedia(() -> {
+			    Platform.runLater(this::playNextTrack);
+			});
+		}
+		else {
+			System.out.println("Soundtrack " + dpe.id + " not found");
+			playNextTrack();
+		}
+	}
 	public void stopSession() {
 		if(mediaPlayer == null) return;
 		currentSession = null;
+		sData.currentSession.created = false;
+		
 		mediaPlayer.setOnEndOfMedia(null);
 		mediaPlayer.stop();
 		mediaPlayer.dispose();
@@ -240,12 +310,18 @@ public class App {
 		FileManager fm = fTree.createFile(path);
 		Playlist playlist = readPlaylist(fm, path, id);
 		for(String entryId: ids) {
-			DataPlaylistEntry entry = new DataPlaylistEntry(new DataString(entryId), new DataInt(0), new DataArray<DataString>(DataString::new));
-			playlist.add(entry);
+			TrackEntry tEntry = soundtracks.get(entryId);
+			if(tEntry != null) {
+				tEntry.inPlaylists.add(entryId);
+				DataPlaylistEntry entry = new DataPlaylistEntry(new DataString(entryId), new DataMap<DataString>(DataString::new));
+				playlist.add(entry);
+			}
 		}
 		for(String subPlaylistId: subIds) {
-			playlist.subplaylists.add(new DataString(subPlaylistId));
+			playlist.addSubplaylist(subPlaylistId);
 		}
+		playlist.dataContainer.system.save();
+		plData.dataContainer.system.save();
 	}
 	public Session createSession(List<Playlist> sessionParts, Path path, boolean looping, boolean shuffle) throws IOException {
 		String id = UUID.randomUUID().toString();
@@ -254,10 +330,14 @@ public class App {
 		Session session = readSession(fm, path, id);
 		
 		for(Playlist playlist: sessionParts) {
-			session.add(playlist.getAll(playlists));
+			session.add(playlist.getAll(playlists, new HashSet<String>(), true));
 		}
 		session.loop.set(looping);
 		if(shuffle) session.shuffle(false);
+		
+		session.dataContainer.system.save();
+		sData.dataContainer.system.save();
+		
 		return session;
 	}
 	//Load Functions
@@ -344,8 +424,13 @@ public class App {
 				e.printStackTrace();
 			}
 			Playlist playlist =  (Playlist) ds.getOrCreate("").adapter;
-			if(playlist != null)
+			if(playlist != null) {
+				for(int i = 0; i < playlist.size(); i++) {
+					TrackEntry entry = soundtracks.get(playlist.getId(i));
+					if(entry != null) entry.inPlaylists.add(id);
+				}
 				playlists.put(id, playlist);
+			}
 			return playlist;
 		}
 		return null;

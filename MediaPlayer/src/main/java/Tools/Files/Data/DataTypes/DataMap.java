@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import Tools.Files.Util;
 import Tools.Files.Data.DataType;
 import Tools.Files.Data.Return2;
-import Tools.Files.Data.Util;
 
 public class DataMap<T extends DataType> extends DataType {
 	private Map<String, T> data;
@@ -32,11 +32,11 @@ public class DataMap<T extends DataType> extends DataType {
 	public void setData(String s) {
 		created = true;
 		data.clear();
-		if(s.length() < 2) return;
+		if(s.length() < 3) return;
 		while(!s.isEmpty()) {
 			if(s.charAt(0) != '[') throw new Error("Cant read Map");
 			s = s.substring(1);
-			Return2<String, List<String>> ret2 = Util.getStringParts(s);
+			Return2<String, List<String>> ret2 = Util.getStringParts(s, ',', -1);
 			s = ret2.one;
 			String mapping = ret2.two.get(0);
 			String mapData = ret2.two.get(1);
@@ -62,7 +62,16 @@ public class DataMap<T extends DataType> extends DataType {
 		return ret;
 	}
 	@Override
-	public DataMap<T> copy() {
+	public DataMap<T> instance() {
 		return new DataMap<T>(supplier);
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public DataMap<T> copy() {
+		DataMap<T> ret = new DataMap<T>(supplier);
+		this.data.forEach((key, val) -> {
+			ret.get().put(key, (T) val.copy());
+		});
+		return ret;
 	}
 }

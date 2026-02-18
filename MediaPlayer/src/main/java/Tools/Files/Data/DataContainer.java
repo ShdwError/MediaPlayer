@@ -16,7 +16,7 @@ public class DataContainer {
 	}
 	public void createData() {
 		system.containerData.forEach((s,a) -> {
-			data.put(s, a.copy());
+			data.put(s, a.instance());
 		});
 	}
 	public void addAdapter() {

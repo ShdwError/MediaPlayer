@@ -1,7 +1,10 @@
-package Tools.Files.Data;
+package Tools.Files;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import Tools.Files.Data.DataType;
+import Tools.Files.Data.Return2;
 
 public class Util {
 	public static Return2<String, String> getStringPart(String s) {
@@ -42,19 +45,27 @@ public class Util {
 		}
 		return false;
 	}
+	public static String getSendable(char seperator, DataType... ar) {
+		StringBuilder ret = new StringBuilder();
+		for(DataType data: ar) {
+			if(!ret.isEmpty()) ret.append(seperator);
+			ret.append(Util.getSendable(data.getData()));
+		}
+		return ret.toString();
+	}
 	public static String getSendable(String s) {
 		return s.length() + ":" + s;
 	}
 	public static String getSendable(int i) {
 		return getSendable("" + i);
 	}
-	public static Return2<String, List<String>> getStringParts(String s) {
+	public static Return2<String, List<String>> getStringParts(String s, char betweenSeperator, int times) {
 		List<String> list = new ArrayList<>();
 		Return2<String, String> ret2 = getStringPart(s);
 		list.add(ret2.two);
 		s = ret2.one;
-		while(s.length() > 0) {
-			if(s.charAt(0) != ',') break;
+		while(s.length() > 0 && --times != 0) {
+			if(s.charAt(0) != betweenSeperator) break;
 			ret2 = getStringPart(s.substring(1));
 			list.add(ret2.two);
 			s = ret2.one;

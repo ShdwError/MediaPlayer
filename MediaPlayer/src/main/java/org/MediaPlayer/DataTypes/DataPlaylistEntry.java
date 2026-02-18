@@ -1,66 +1,81 @@
 package org.MediaPlayer.DataTypes;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.MediaPlayer.TrackEntry;
+import org.MediaPlayer.UtilFunctions;
 
+import Tools.Files.Util;
 import Tools.Files.Data.DataType;
-import Tools.Files.Data.Return2;
-import Tools.Files.Data.Util;
 import Tools.Files.Data.DataTypes.*;
 
 public class DataPlaylistEntry extends DataType {
 	public DataString id;
-	public DataInt loopAmount;
-	public DataArray<DataString> tags;
+	public DataMap<DataString> tags;
 	public DataPlaylistEntry() {
 		super();
 		this.id = new DataString();
-		this.loopAmount = new DataInt();
-		this.tags = new DataArray<>(DataString::new);
+		this.tags = new DataMap<>(DataString::new);
 	}
-	public DataPlaylistEntry(DataString id, DataInt loopAmount, DataArray<DataString> tags) {
+	public DataPlaylistEntry(DataString id, DataMap<DataString> tags) {
 		this.id = id;
-		this.loopAmount = loopAmount;
 		this.tags = tags;
 		this.created = true;
 	}
+	public int getLoopAmount() {
+		DataString ds = tags.get().get("LoopAmount");
+		if(ds == null) return 0;
+		return UtilFunctions.getInt(ds.get());
+	}
+	public void setLoopAmount(int i) {
+		created = true;
+		tags.get().put("LoopAmount", new DataString("" + i));
+	}
+	public String getForcedNext() {
+		DataString ds = tags.get().get("ForcedNext");
+		if(ds == null) return null;
+		return ds.get();
+	}
+	public void setForcedNext(String id) {
+		created = true;
+		tags.get().put("ForcedNext", new DataString(id));
+	}
+	
+	
+	
 	@Override
 	public void setData(String s) {
+		if(s == null) return;
+		
 		int length = s.length()-2;
-		if(s.length() == 0) return;
+		if(s.length() < 3) return;
 		if(s.charAt(0) != '{' || s.charAt(length+1) != '}') throw new Error("Cant read PlaylistEntry");
 		s = s.substring(1);
+		List<String> parts = Util.getStringParts(s, ',', 2).two;
 		
-		//id
-		Return2<String, String> r2 = Util.getStringPart(s);
-		s = r2.one.substring(1);
-		id.setData(r2.two);
+		id.setData(parts.get(0));
+		tags.setData(parts.get(1));
 		
-		//loopAmount
-		r2 = Util.getStringPart(s);
-		s = r2.one.substring(1);
-		loopAmount.setData(r2.two);
-		
-		//tags
-		r2 = Util.getStringPart(s);
-		tags.setData(r2.two);
+		this.created = true;
 	}
 	@Override
 	public String getData() {
-		return "{" + Util.getSendable(id.getData()) + "," + Util.getSendable(loopAmount.getData()) + "," + Util.getSendable(tags.getData()) + "}";
+		if(created)
+			return "{" + Util.getSendable(',', id, tags) + "}";
+		return "";
 	}
 	@Override
-	public DataType copy() {
+	public DataType instance() {
 		return new DataPlaylistEntry();
+	}
+	@Override
+	public DataPlaylistEntry copy() {
+		return new DataPlaylistEntry(id.copy(), tags.copy());
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
-		if(obj.getClass() == TrackEntry.class) {
-			TrackEntry entry = (TrackEntry) obj;
-			return entry.id.equals(id.get());
+		if(obj instanceof DataPlaylistEntry dpe) {
+			return dpe.id.get().equals(id.get());
 		}
 		return super.equals(obj);
 	}

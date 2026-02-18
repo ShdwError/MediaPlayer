@@ -28,7 +28,11 @@ public class DataChar extends DataType {
 		return "" + data;
 	}
 	@Override
-	public DataChar copy() {
+	public DataChar instance() {
 		return new DataChar();
+	}
+	@Override
+	public DataChar copy() {
+		return new DataChar(data);
 	}
 }

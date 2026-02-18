@@ -30,8 +30,12 @@ public class DataDouble extends DataType {
 		return "" + data;
 	}
 	@Override
-	public DataDouble copy() {
+	public DataDouble instance() {
 		return new DataDouble();
+	}
+	@Override
+	public DataDouble copy() {
+		return new DataDouble(data);
 	}
 
 }

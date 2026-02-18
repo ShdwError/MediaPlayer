@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import Tools.Files.Data.Util;
-
 public class FileTree {
 
     private final Path root;

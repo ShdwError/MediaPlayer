@@ -30,8 +30,12 @@ public class DataString extends DataType {
 		return data;
 	}
 	@Override
-	public DataString copy() {
+	public DataString instance() {
 		return new DataString();
+	}
+	@Override
+	public DataString copy() {
+		return new DataString(data);
 	}
 
 }

@@ -35,8 +35,12 @@ public class DataBoolean extends DataType {
 		return "0b";
 	}
 	@Override
-	public DataBoolean copy() {
+	public DataBoolean instance() {
 		return new DataBoolean();
+	}
+	@Override
+	public DataBoolean copy() {
+		return new DataBoolean(data);
 	}
 
 }

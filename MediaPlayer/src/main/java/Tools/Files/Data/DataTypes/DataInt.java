@@ -38,8 +38,12 @@ public class DataInt extends DataType {
 		return "" + data;
 	}
 	@Override
-	public DataInt copy() {
+	public DataInt instance() {
 		return new DataInt();
+	}
+	@Override
+	public DataInt copy() {
+		return new DataInt(data);
 	}
 
 }

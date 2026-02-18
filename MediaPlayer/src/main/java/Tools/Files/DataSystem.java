@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 import Tools.Files.Data.DataAdapter;
 import Tools.Files.Data.DataContainer;
 import Tools.Files.Data.DataType;
-import Tools.Files.Data.Util;
 import Tools.Files.Data.DataTypes.DataString;
 
 public class DataSystem {
