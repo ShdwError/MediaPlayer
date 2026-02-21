@@ -161,5 +161,12 @@ public class Playlist extends DataAdapter {
 	    set(ordered);
 	    return ordered;
 	}
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof Playlist p) {
+			return p.id.equals(this.id);
+		}
+		return super.equals(obj);
+	}
 
 }

@@ -367,9 +367,12 @@ public class AppUI {
 									Playlist subplaylist = findPlaylist(s, sc);
 									if(subplaylist == null) {
 										System.out.println("Playlist not found");
-										continue;
 									}
-									playlist.addSubplaylist(subplaylist.id);
+									else if(playlist.equals(subplaylist)) {
+										System.out.println("Cannot add Playlist to itself");
+									}
+									else 
+										playlist.addSubplaylist(subplaylist.id);
 								}
 							}
 							else if(s.equals("modify")) {
@@ -454,7 +457,8 @@ public class AppUI {
 					
 					try {
 						name = name.replace("/", "-").replace("\\", "-");
-						Path sessionPath = app.fTree.getNextFreeFileName(Path.of("Sessions", name + ".txt"));
+						Path sessionPath = Path.of("Sessions", name + ".txt");
+						if(!ownName) sessionPath = app.fTree.getNextFreeFileName(sessionPath);
 						Session session = app.createSession(sessionParts, sessionPath, looping, shuffle); 
 						Platform.runLater(() -> {
 							app.playSession(session);
@@ -684,7 +688,8 @@ public class AppUI {
 			if(i == current)
 				System.out.print("> ");
 			System.out.println(i + ": " + app.soundtracks.get(id).getName());
-			if(dpe.getForcedNext() != null) System.out.print("-> ");
+			if(dpe.getForcedNext() != null && i < last-1 && app.currentSession.get(i+1).id.get().equals(dpe.getForcedNext()))
+				System.out.print("-> ");
 		}
 	}
 	public void printPlaylist(Playlist playlist) {
@@ -701,7 +706,8 @@ public class AppUI {
 			if(i == current)
 				System.out.print("> ");
 			System.out.println(i + ": " + entry.getName());
-			if(dpe.getForcedNext() != null) System.out.print("-> ");
+			if(dpe.getForcedNext() != null && i < size-1 && list.get(i+1).id.get().equals(dpe.getForcedNext()))
+				System.out.print("-> ");
 			//System.out.println(id);
 		}
 	}

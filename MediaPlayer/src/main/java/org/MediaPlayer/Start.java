@@ -9,7 +9,7 @@ public class Start extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		App app = new App(Path.of("Test").toAbsolutePath());
+		App app = new App(Path.of("MediaPlayer").toAbsolutePath());
 	}
 	
 	public static void main(String[] args) {

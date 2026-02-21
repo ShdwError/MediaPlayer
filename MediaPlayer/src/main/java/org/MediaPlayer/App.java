@@ -320,6 +320,7 @@ public class App {
 		for(String subPlaylistId: subIds) {
 			playlist.addSubplaylist(subPlaylistId);
 		}
+		playlist.reorganize();
 		playlist.dataContainer.system.save();
 		plData.dataContainer.system.save();
 	}
@@ -334,6 +335,8 @@ public class App {
 		}
 		session.loop.set(looping);
 		if(shuffle) session.shuffle(false);
+		
+		session.reorganize();
 		
 		session.dataContainer.system.save();
 		sData.dataContainer.system.save();
@@ -367,6 +370,7 @@ public class App {
 		plData.playlists.forEach((id, data) -> {
 			FileManager fm = fTree.get(Path.of(data.get()));
 			Playlist playlist = readPlaylist(fm, Path.of(data.get()), id);
+			//if(playlist == null) plData.playlists.remove(id);
 		});
 	}
 	public void loadSessions() throws IOException {
@@ -381,6 +385,7 @@ public class App {
 		sData.sessions.forEach((id, data) -> {
 			FileManager fm = fTree.get(Path.of(data.get()));
 			Session session = readSession(fm, Path.of(data.get()), id);
+			if(session == null) sData.sessions.remove(id);
 		});
 	}
 	//Read Functions
@@ -429,6 +434,7 @@ public class App {
 					TrackEntry entry = soundtracks.get(playlist.getId(i));
 					if(entry != null) entry.inPlaylists.add(id);
 				}
+				playlist.reorganize();
 				playlists.put(id, playlist);
 			}
 			return playlist;
@@ -455,8 +461,10 @@ public class App {
 				e.printStackTrace();
 			}
 			Session session =  (Session) ds.getOrCreate("").adapter;
-			if(session != null)
+			if(session != null) {
+				session.reorganize();
 				sessions.put(id, session);
+			}
 			return session;
 		}
 		return null;
@@ -466,7 +474,7 @@ public class App {
 		List<FileManager> files = fTree.getAll(Path.of("Soundtracks"));
 		for(FileManager f: files) {
 			String[] split = Util.getNameAndType(f.getPath().toString());
-			if(split[1].equals(".mp3")) {
+			if(!split[1].equals(".txt")) {
 				String id = UUID.randomUUID().toString();
 				TrackEntry entry = new TrackEntry(path.relativize(f.getPath()), id);
 				if(!soundtracks.containsValue(entry)) {
