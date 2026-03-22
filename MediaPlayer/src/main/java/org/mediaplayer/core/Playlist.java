@@ -1,4 +1,4 @@
-package org.MediaPlayer;
+package org.mediaplayer.core;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.MediaPlayer.DataTypes.DataPlaylistEntry;
+import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 
 import Tools.Files.Util;
 import Tools.Files.Data.DataAdapter;
@@ -16,9 +16,10 @@ import Tools.Files.Data.DataType;
 import Tools.Files.Data.DataTypes.*;
 
 public class Playlist extends DataAdapter {
-	Path path;
+	public Path path;
 	public String id;
 	public DataString description;
+	public DataBoolean shuffle;
 	private List<DataPlaylistEntry> playlist;
 	private List<DataString> subplaylists;
 	public Set<String> uniqueEntrySet;
@@ -50,15 +51,24 @@ public class Playlist extends DataAdapter {
 	public void add(Playlist playlist)  {
 		add(playlist.playlist);
 	}
+	public void addAt(int pos, DataPlaylistEntry entry) {
+		if(!uniqueEntrySet.contains(entry.id.get())) {
+			uniqueEntrySet.add(entry.id.get());
+			playlist.add(pos, entry);
+		}
+	}
 	@SuppressWarnings("unlikely-arg-type")
-	public boolean remove(TrackEntry entry) {
-		return playlist.remove(entry);
+	public void remove(TrackEntry entry) {
+		playlist.remove(entry);
+		uniqueEntrySet.remove(entry.id);
 	}
 	public void remove(DataPlaylistEntry dpe) {
 		playlist.remove(dpe);
+		uniqueEntrySet.remove(dpe.id.get());
 	}
 	public void remove(int i) {
 		playlist.remove(i);
+		uniqueEntrySet.remove(getId(i));
 	}
 	public void set(int i, DataPlaylistEntry entry) {
 		playlist.set(i, entry);
@@ -76,12 +86,13 @@ public class Playlist extends DataAdapter {
 	public String getId(int i) {
 		return playlist.get(i).id.get();
 	}
-	public List<DataPlaylistEntry> getAll(Map<String, Playlist> playlists, Set<String> newUniqueSet, boolean getCopy) {
+	public List<DataPlaylistEntry> getAll(Map<String, Playlist> playlists, boolean getCopy) {
 		List<DataPlaylistEntry> ret = new ArrayList<>(playlist);
+		Set<String> newUniqueSet = new HashSet<>(uniqueEntrySet);
 		for(DataString ds: subplaylists) {
 			Playlist subplaylist = playlists.get(ds.get());
 			if(subplaylist != null) {
-				for(DataPlaylistEntry dpe: subplaylist.getAll(playlists, newUniqueSet, getCopy)) {
+				for(DataPlaylistEntry dpe: subplaylist.getAll(playlists, getCopy)) {
 					if(!newUniqueSet.contains(dpe.id.get())) {
 						newUniqueSet.add(dpe.id.get());
 						if(getCopy)
@@ -104,15 +115,20 @@ public class Playlist extends DataAdapter {
 		return playlist.size();
 	}
 	
-	//For Subclasses
-	protected void createPlaylist(List<DataPlaylistEntry> playlist) {
+	public void create(List<DataPlaylistEntry> playlist) {
 		this.playlist = playlist;
+		for(DataPlaylistEntry dpe: playlist) {
+			if(!uniqueEntrySet.contains(dpe.id.get()))
+				uniqueEntrySet.add(dpe.id.get());
+		}
 	}
+	
 	@Override
 	public void createData(Map<String, DataType> data) {
 		this.description = (DataString) data.get("Description");
-		createPlaylist(((DataArray<DataPlaylistEntry>) data.get("Playlist")).get());
+		this.create(((DataArray<DataPlaylistEntry>) data.get("Playlist")).get());
 		this.subplaylists = ((DataArray<DataString>) data.get("Subplaylists")).get();
+		this.shuffle = (DataBoolean) data.get("Shuffle");
 	}
 	
 	public List<DataPlaylistEntry> reorganize() {

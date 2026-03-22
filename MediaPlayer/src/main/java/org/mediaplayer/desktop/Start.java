@@ -1,6 +1,8 @@
-package org.MediaPlayer;
+package org.mediaplayer.desktop;
 
 import java.nio.file.Path;
+
+import org.mediaplayer.core.App;
 
 import javafx.application.Application;
 import javafx.stage.Stage;

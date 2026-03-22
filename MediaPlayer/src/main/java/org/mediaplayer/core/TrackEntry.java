@@ -1,11 +1,11 @@
-package org.MediaPlayer;
+package org.mediaplayer.core;
 
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.MediaPlayer.DataTypes.DataPlaylistEntry;
+import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 
 import Tools.Files.Util;
 import Tools.Files.Data.DataAdapter;
@@ -13,10 +13,10 @@ import Tools.Files.Data.DataType;
 import Tools.Files.Data.DataTypes.*;
 
 public class TrackEntry extends DataAdapter {
-	DataString description;
-	DataInt length;
-	Path path;
-	Set<String> inPlaylists;
+	public DataString description;
+	public DataInt length;
+	public Path path;
+	public Set<String> inPlaylists;
 	public String id;
 	public TrackEntry(Path path, String id) {
 		this.path = path;

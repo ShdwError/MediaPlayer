@@ -1,21 +1,17 @@
-package org.MediaPlayer;
+package org.mediaplayer.core;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.MediaPlayer.DataTypes.DataPlaylistEntry;
+import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 
 import Tools.Files.Util;
 import Tools.Files.Data.DataType;
-import Tools.Files.Data.Return2;
 import Tools.Files.Data.DataTypes.*;
 
 public class Session extends Playlist {
@@ -58,7 +54,7 @@ public class Session extends Playlist {
 	@Override
 	public void createData(Map<String, DataType> data) {
 		this.description = (DataString) data.get("Description");
-		createPlaylist(((DataArray<DataPlaylistEntry>) data.get("Playlist")).get());
+		this.create(((DataArray<DataPlaylistEntry>) data.get("Playlist")).get());
 		this.pos = (DataInt) data.get("Position");
 		this.loop = (DataBoolean) data.get("Loop");
 		this.created = (DataDate) data.get("CreatedOn");

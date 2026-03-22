@@ -1,8 +1,8 @@
-package org.MediaPlayer.DataTypes;
+package org.mediaplayer.core.DataTypes;
 
 import java.util.List;
 
-import org.MediaPlayer.UtilFunctions;
+import org.mediaplayer.core.UtilFunctions;
 
 import Tools.Files.Util;
 import Tools.Files.Data.DataType;

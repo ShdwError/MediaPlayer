@@ -1,4 +1,8 @@
-package org.MediaPlayer;
+package org.mediaplayer.core;
+
+import java.nio.file.Path;
+
+import Tools.Files.Util;
 
 public class UtilFunctions {
 	public static String getLengthString(int sec) {
@@ -21,6 +25,9 @@ public class UtilFunctions {
 			System.out.println("Not a Number");
 		}
 		return null;
+	}
+	public static Path getSoundtrackInfoPath(Path path) {
+		return Path.of(Util.getNameAndType(path.toString())[0] + "_info.txt");
 	}
 
 }

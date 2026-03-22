@@ -1,4 +1,4 @@
-package org.MediaPlayer;
+package org.mediaplayer;
 
 public class SystemInfo {
 

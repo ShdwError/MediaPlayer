@@ -1,4 +1,4 @@
-package org.MediaPlayer.Data;
+package org.mediaplayer.core.Data;
 
 import java.util.Map;
 

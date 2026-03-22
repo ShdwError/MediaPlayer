@@ -1,44 +1,55 @@
-package org.MediaPlayer;
+package org.mediaplayer.desktop;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.MediaPlayer.DataTypes.DataPlaylistEntry;
+import org.mediaplayer.core.App;
+import org.mediaplayer.core.Playlist;
+import org.mediaplayer.core.Session;
+import org.mediaplayer.core.TrackEntry;
+import org.mediaplayer.core.UtilFunctions;
+import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
+import org.mediaplayer.core.Generics.GenericUI;
 
 import Tools.Files.Util;
-import Tools.Files.Data.DataTypes.DataArray;
-import Tools.Files.Data.DataTypes.DataInt;
-import Tools.Files.Data.DataTypes.DataMap;
 import Tools.Files.Data.DataTypes.DataString;
 import javafx.application.Platform;
 
-public class AppUI {
-	App app;
-	public AppUI(App app) {
-		this.app = app;
+public class ConsoleUI extends GenericUI {
+	private DesktopFileLogic fileLogic;
+	private DesktopAudio audio;
+	
+	public ConsoleUI() {
+		
+	}
+	@Override
+	public void create(App app) {
+		this.audio = (DesktopAudio) app.audio;
+		this.fileLogic = (DesktopFileLogic) app.fileLogic;
 	}
 	public void startUI() {
 		Scanner sc = new Scanner(System.in);
-		//Thread nur wegen Scanner
+		//Thread because of Scanner
 		new Thread(() -> {
 			String s = "";
-			if(app.sData.currentSession.created) {
-				Session session = app.sessions.get(app.sData.currentSession.get());
-				if(session != null) 
+			DataString currentSession = fileLogic.getCurrentSessionData();
+			if(currentSession.created) {
+				Session session = fileLogic.sessions.get(currentSession.get());
+				if(session != null)  {
 					System.out.println("Continue in " + session.getName() + "?");
 					s = sc.next();
 					if(s.equals("yes"))
 						Platform.runLater(() -> {
-							app.playSession(session);
+							audio.playSession(session);
 						});
+				}
 			}
 			printMenu();
 			while(true) {
@@ -50,19 +61,19 @@ public class AppUI {
 					printCurrent();
 				}
 				else if(s.equals("in")) {
-					if(app.currentTrack == null) {
+					if(audio.getCurrentTrack() == null) {
 						System.out.println("No current Track");
 						continue;
 					}
-					for(String plstring: app.currentTrack.inPlaylists) {
-						Playlist playlist = app.playlists.get(plstring);
+					for(String plstring: audio.getCurrentTrack().inPlaylists) {
+						Playlist playlist = fileLogic.playlists.get(plstring);
 						if(playlist != null) System.out.println(playlist.getName());
 					}
 				}
 				else if(s.equals("list")) {
 					s = sc.next();
 					if(s.equals("current"))
-						printPlaylist(app.currentSession);
+						printPlaylist(audio.getCurrentSession());
 					else {
 						Playlist playlist = findPlaylist(s, sc);
 						if(playlist != null)
@@ -71,51 +82,55 @@ public class AppUI {
 				}
 				else if(s.equals("stlist")) {
 					printSoundtracks(false);
-					System.out.println("Trackcount: " + app.soundtracks.size());
+					System.out.println("Trackcount: " + fileLogic.soundtracks.size());
 				}
 				else if(s.equals("playst")) {
 					printSoundtracks(true);
 					s = sc.next();
-					TrackEntry entry = app.soundtracks.get(s);
-					app.currentSession = null;
+					TrackEntry entry = fileLogic.soundtracks.get(s);
+					audio.stopSession();
 					if(entry == null) System.out.println("Cannot find " + s);
 					else Platform.runLater(() -> {
-						app.playSoundtrack(entry);
+						audio.playSoundtrack(entry);
 					});
 				}
 				else if(s.equals("plist")) {
 					printPlaylists(false);
 				}
 				else if(s.equals("pause")) {
-					if(App.mediaPlayer != null)
-						App.mediaPlayer.pause();
+					audio.pause();
 				}
 				else if(s.equals("cont")) {
-					if(App.mediaPlayer != null) {
-						App.mediaPlayer.play();
+					audio.play();
+				}
+				else if(s.equals("vol")) {
+					s = sc.next();
+					Integer vol = UtilFunctions.getInt(s);
+					if(vol != null)  {
+						audio.setVolume(vol/100.0);
 					}
 				}
 				else if(s.equals("stop")) {
-					app.stopSession();
+					audio.stopSession();
 				}
 				else if(s.equals("rename"))  {
 					s = sc.next();
 					if(s.equals("current")) {
 						String type = sc.next();
 						s = sc.nextLine().strip();
-						while(s.equals("")) sc.nextLine().strip();
+						while(s.equals("")) s = sc.nextLine().strip();
 						if(type.equals("session")) {
-							if(app.currentSession != null) {
-								Path newPath = app.currentSession.path.getParent().resolve(Path.of(s + ".txt"));
-								app.renameSession(app.currentSession, app.fTree.getNextFreeFileName(newPath));
-								System.out.println("Renaming Session to " + app.currentSession.getName());
+							if(audio.getCurrentSession() != null) {
+								Path newPath = Path.of("Sessions", s + ".txt");
+								fileLogic.renameSession(audio.getCurrentSession(), fileLogic.getFileTree().getNextFreeFileName(newPath));
+								System.out.println("Renaming Session to " + audio.getCurrentSession().getName());
 							}
 						}
 						else if(type.equals("soundtrack")) {
-							if(app.currentTrack != null) {
-								Path newPath = app.currentTrack.path.getParent().resolve(Path.of(s + ".txt"));
-								app.renameSoundtrack(app.currentTrack, app.fTree.getNextFreeFileName(newPath));
-								System.out.println("Renamed Soundtrack to " + app.currentTrack.getName());
+							if(audio.getCurrentTrack() != null) {
+								Path newPath = Path.of("Soundtracks", s + ".txt");
+								fileLogic.renameSoundtrack(audio.getCurrentTrack(), fileLogic.getFileTree().getNextFreeFileName(newPath));
+								System.out.println("Renamed Soundtrack to " + audio.getCurrentTrack().getName());
 							}
 						}
 					}
@@ -124,26 +139,36 @@ public class AppUI {
 						if(type.equals("session")) {
 							printSessions();
 							String id = sc.next();
-							Session session = app.sessions.get(id);
+							Session session = fileLogic.sessions.get(id);
 							if(session == null) continue;
-							Path newPath = session.path.getParent().resolve(Path.of(s + ".txt"));
-							app.renameSession(session, app.fTree.getNextFreeFileName(newPath));
+							s = sc.nextLine().strip();
+							while(s.equals("")) s = sc.nextLine().strip();
+							Path newPath = Path.of("Sessions", s + ".txt");
+							fileLogic.renameSession(session, newPath);
+							System.out.println("Renaming Session to " + session.getName());
 						}
 						else if(type.equals("playlist")) {
 							printPlaylists(true);
 							String id = sc.next();
-							Playlist playlist = app.playlists.get(id);
+							Playlist playlist = fileLogic.playlists.get(id);
 							if(playlist == null) continue;
-							Path newPath = playlist.path.getParent().resolve(Path.of(s + ".txt"));
-							app.renamePlaylist(playlist, app.fTree.getNextFreeFileName(newPath));
+							s = sc.nextLine().strip();
+							while(s.equals("")) s = sc.nextLine().strip();
+							Path newPath = Path.of("Playlists", s + ".txt");
+							fileLogic.renamePlaylist(playlist, newPath);
+							System.out.println("Renaming Playlist to " + playlist.getName());
 						}
 						else if(type.equals("soundtrack")) {
 							printSoundtracks(true);
 							String id = sc.next();
-							TrackEntry soundtrack = app.soundtracks.get(id);
+							TrackEntry soundtrack = fileLogic.soundtracks.get(id);
 							if(soundtrack == null) continue;
-							Path newPath = soundtrack.path.getParent().resolve(Path.of(s + ".txt"));
-							app.renameSoundtrack(soundtrack, app.fTree.getNextFreeFileName(newPath));
+							s = sc.nextLine().strip();
+							while(s.equals("")) s = sc.nextLine().strip();
+							Util.getNameAndType(soundtrack.path.toString());
+							Path newPath = Path.of("Soundtracks", s + Util.getNameAndType(soundtrack.path.toString())[1]);
+							fileLogic.renameSoundtrack(soundtrack, newPath);
+							System.out.println("Renaming Soundtrack to " + soundtrack.getName());
 						}
 					}
 				}
@@ -152,41 +177,45 @@ public class AppUI {
 					if(s.equals("session")) {
 						printSessions();
 						s = sc.next();
-						Session session = app.sessions.get(s);
+						Session session = fileLogic.sessions.get(s);
 						if(session != null) {
 							System.out.println("Session deleted");
-							app.deleteSession(session);
+							fileLogic.deleteSession(session);
 						}
 						else System.out.println("Cannot find Session");
 					}
 					else if(s.equals("playlist")) {
 						printPlaylists(true);
 						s = sc.next();
-						Playlist playlist = app.playlists.get(s);
+						Playlist playlist = fileLogic.playlists.get(s);
 						if(playlist != null) {
 							System.out.println("Playlist deleted");
-							app.deletePlaylist(playlist);
+							fileLogic.deletePlaylist(playlist);
 						}
 						else System.out.println("Cannot find Playlist");
 					}
 					else if(s.equals("soundtrack")) {
 						printSoundtracks(true);
 						s = sc.next();
-						TrackEntry entry = app.soundtracks.get(s);
+						TrackEntry entry = fileLogic.soundtracks.get(s);
 						if(entry != null) {
 							System.out.println();
-							app.deleteSoundtrack(entry);
+							fileLogic.deleteSoundtrack(entry);
 						}
 						else System.out.println("Cannot find Soundtrack");
 					}
 					else if(s.equals("current")) {
 						s = sc.next();
 						if(s.equals("session")) {
-							if(app.currentSession != null) app.deleteSession(app.currentSession);
+							if(audio.getCurrentSession() != null) {
+								Platform.runLater(() -> {
+									fileLogic.deleteSession(audio.getCurrentSession());
+								});
+							}
 							else System.out.println("No active Session");
 						}
 						else if(s.equals("soundtrack")) {
-							if(app.currentTrack != null) app.deleteSoundtrack(app.currentTrack);
+							if(audio.getCurrentTrack() != null) fileLogic.deleteSoundtrack(audio.getCurrentTrack());
 							else System.out.println("No active Soundtrack");
 						}
 						else {
@@ -202,30 +231,30 @@ public class AppUI {
 					while(s.equals("")) s = sc.nextLine().strip();
 					Playlist playlist = findPlaylist(s, sc);
 					if(playlist != null) {
-						System.out.println(app.currentTrack.getName() + " added to " + playlist.getName());
-						app.currentTrack.inPlaylists.add(playlist.id);
-						playlist.add(app.currentSession.getCurrent().copy());
+						System.out.println(audio.getCurrentTrack().getName() + " added to " + playlist.getName());
+						audio.getCurrentTrack().inPlaylists.add(playlist.id);
+						playlist.add(audio.getCurrentSession().getCurrent().copy());
 					}
 				}
 				else if(s.equals("removefrom")) {
-					if(app.currentTrack == null) {
+					if(audio.getCurrentTrack() == null) {
 						System.out.println("No active Soundtrack");
 						continue;
 					}
 					s = sc.nextLine().strip();
 					while(s.equals("")) s = sc.nextLine().strip();
 					Playlist playlist = findPlaylist(s, sc);
-					if(playlist != null && app.currentTrack.inPlaylists.contains(playlist.id)) {
-						System.out.println(app.currentTrack.getName() + " removed from " + playlist.getName());
-						app.currentTrack.inPlaylists.remove(playlist.id);
-						playlist.remove(app.currentTrack);
+					if(playlist != null && audio.getCurrentTrack().inPlaylists.contains(playlist.id)) {
+						System.out.println(audio.getCurrentTrack().getName() + " removed from " + playlist.getName());
+						audio.getCurrentTrack().inPlaylists.remove(playlist.id);
+						playlist.remove(audio.getCurrentTrack());
 					}
 				}
 				else if(s.equals("linkto")) {
 					s = sc.next();
-					int pos = app.currentSession.pos.get();
+					int pos = audio.getCurrentSession().pos.get();
 					Integer pos2 = null;
-					Session session = app.currentSession;
+					Session session = audio.getCurrentSession();
 					
 					if(s.equals("next"))
 						pos2 = pos+1;
@@ -242,9 +271,9 @@ public class AppUI {
 						System.out.println("Same number");
 					}
 					else {
-						TrackEntry entry2 = app.soundtracks.get(session.getId(pos2));
+						TrackEntry entry2 = fileLogic.soundtracks.get(session.getId(pos2));
 						if(entry2 != null) {
-							System.out.println(app.currentTrack.getName() + " is now always next to " + entry2.getName());
+							System.out.println(audio.getCurrentTrack().getName() + " is now always next to " + entry2.getName());
 							session.get(pos).setForcedNext(entry2.id);
 						}
 						session.reorganize(true, session.getCurrent());
@@ -271,6 +300,7 @@ public class AppUI {
 							System.out.println("- move/copy all *number* [...] to *name*");
 							System.out.println("- move/copy from *number* [to] *number* to *name*");
 							System.out.println("- add playlist *name*");
+							System.out.println("- modify entry *number*");
 							System.out.println("- modify entry *number*");
 							System.out.println("- finish");
 							s = sc.next();
@@ -335,7 +365,7 @@ public class AppUI {
 										continue;
 									}
 									for(DataPlaylistEntry dpe: removedTracks) {
-										TrackEntry entry = app.soundtracks.get(dpe.id.get());
+										TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 										if(entry != null) {
 											if(remove) {
 												entry.inPlaylists.remove(playlist.id);
@@ -350,7 +380,7 @@ public class AppUI {
 								}
 								else {
 									for(DataPlaylistEntry dpe: removedTracks) {
-										TrackEntry entry = app.soundtracks.get(dpe.id.get());
+										TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 										if(entry != null) {
 											entry.inPlaylists.remove(playlist.id);
 											System.out.println(entry.getName() + " removed from " + playlist.getName());
@@ -387,14 +417,14 @@ public class AppUI {
 										System.out.println("Out of Bounds");
 									}
 									else {
-										TrackEntry entry = app.soundtracks.get(playlist.getId(pos));
+										TrackEntry entry = fileLogic.soundtracks.get(playlist.getId(pos));
 										if(entry != null) {
 											System.out.println("Modify Entry " + entry.getName());
 											System.out.println("- setnext *number*");
+											System.out.println("- moveto *number*");
 											s = sc.next();
-											if(s.equals("setnext")) {
-												s = sc.next();
-												Integer pos2 = UtilFunctions.getInt(s);
+											if(s.equals("setnext") || s.equals("moveto")) {
+												Integer pos2 = UtilFunctions.getInt(sc.next());
 												if(pos2 == null) {
 													System.out.println("Not a Number");
 												}
@@ -405,12 +435,20 @@ public class AppUI {
 													System.out.println("Same number");
 												}
 												else {
-													TrackEntry entry2 = app.soundtracks.get(playlist.getId(pos2));
-													if(entry2 != null) {
-														System.out.println(entry.getName() + " is now always next to " + entry2.getName());
-														playlist.get(pos).setForcedNext(entry2.id);
+													if(s.equals("setnext")) {
+														TrackEntry entry2 = fileLogic.soundtracks.get(playlist.getId(pos2));
+														if(entry2 != null) {
+															System.out.println(entry.getName() + " is now always next to " + entry2.getName());
+															playlist.get(pos).setForcedNext(entry2.id);
+														}
+														playlist.reorganize();
 													}
-													playlist.reorganize();
+													else if(s.equals("moveto")) {
+														//TODO Hier funktioniert noch was nicht ganz
+														DataPlaylistEntry dpe = playlist.get(pos);
+														playlist.remove(pos);
+														playlist.addAt(pos2, dpe);
+													}
 												}
 											}
 										}
@@ -438,7 +476,7 @@ public class AppUI {
 							ownName = true;
 						} 
 						else {
-							Playlist playlist = app.playlists.get(s);
+							Playlist playlist = fileLogic.playlists.get(s);
 							if(playlist != null) {
 								if(!ownName) {
 									if(!name.equals("")) name += "+";
@@ -458,12 +496,11 @@ public class AppUI {
 					try {
 						name = name.replace("/", "-").replace("\\", "-");
 						Path sessionPath = Path.of("Sessions", name + ".txt");
-						if(!ownName) sessionPath = app.fTree.getNextFreeFileName(sessionPath);
-						Session session = app.createSession(sessionParts, sessionPath, looping, shuffle); 
+						if(!ownName) sessionPath = fileLogic.getFileTree().getNextFreeFileName(sessionPath);
+						Session session = fileLogic.createSession(sessionParts, sessionPath, looping, shuffle); 
 						Platform.runLater(() -> {
-							app.playSession(session);
+							audio.playSession(session);
 						});
-						app.save();
 					} 
 					catch (IOException e) {
 						e.printStackTrace();
@@ -473,35 +510,36 @@ public class AppUI {
 					System.out.println("Sessions");
 					printSessions();
 					s = sc.next();
-					Session session = app.sessions.getOrDefault(s, null);
+					Session session = fileLogic.sessions.get(s);
 					if(session != null)
-						app.playSession(session);
+						audio.playSession(session);
+					else System.out.println("Session not found");
 				}
 				else if(s.equals("shuffle")) {
-					if(app.currentSession != null) {
-						app.currentSession.shuffle(true);
+					if(audio.getCurrentSession() != null) {
+						audio.getCurrentSession().shuffle(true);
 						printPlaylistPreview();
 					}
 				}
 				else if(s.equals("next")) {
-					if(app.currentSession == null) {
+					if(audio.getCurrentSession() == null) {
 						continue;
 					}
 					Platform.runLater(() -> {
-						app.playNextTrack();
+						audio.playNextTrack();
 					});	
 				}
 				else if(s.equals("goto")) {
-					if(app.currentSession == null) {
+					if(audio.getCurrentSession() == null) {
 						continue;
 					}
 					s = sc.next();
 					Integer pos = UtilFunctions.getInt(s);
-					if(pos != null && pos >= 0 && pos < app.currentSession.size()) app.moveToSessionPos(pos);
+					if(pos != null && pos >= 0 && pos < audio.getCurrentSession().size()) audio.moveToSessionPos(pos);
 				}
 				else if(s.equals("prev")) {
 					Platform.runLater(() -> {
-						app.playPreviousTrack();
+						audio.playPreviousTrack();
 					});	
 				}
 				else if(s.equals("create")) {
@@ -516,6 +554,7 @@ public class AppUI {
 						System.out.println("- add *id* [...];");
 						System.out.println("- addpl *id* [...];");
 						System.out.println("- get *id* [to] *id");
+						System.out.println("- getcont *name*");
 						System.out.println("- back");
 						System.out.println("- create");
 						System.out.println();
@@ -523,7 +562,7 @@ public class AppUI {
 						if(s.equals("add")) {
 							List<String> trids = readStringsTill(sc, ";");
 							for(String id: trids) {
-								TrackEntry entry = app.soundtracks.get(id);
+								TrackEntry entry = fileLogic.soundtracks.get(id);
 								if(entry == null) System.out.println("Cannot find " + id);
 								else if(uniqueTracks.contains(id)) System.out.println(id + " is already in Playlist");
 								else {
@@ -549,11 +588,30 @@ public class AppUI {
 								if(id.equals(id2)) inRange = false;
 							}
 						}
+						else if(s.equals("getcont")) {
+							s = sc.nextLine().strip();
+							while(s.equals("")) s = sc.nextLine().strip();
+							
+							List<TrackEntry> entries = new ArrayList<>();
+							
+							for(Map.Entry<String, TrackEntry> e: tracksSortedByName()) {
+								if(e.getValue().path.toString().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) {
+									entries.add(e.getValue());
+									System.out.println(e.getValue().getName());
+								}
+							}
+							System.out.println("Add These?");
+							if(sc.next().equals("yes"))
+								for(TrackEntry entry: entries) {
+									uniqueTracks.add(entry.id);
+									tracks.add(entry.id);
+								}
+						}
 						else if(s.equals("addpl")) {
 							printPlaylists(true);
 							List<String> plids = readStringsTill(sc, ";");
 							for(String id: plids) {
-								Playlist playlist = app.playlists.get(id);
+								Playlist playlist = fileLogic.playlists.get(id);
 								if(playlist == null) System.out.println("Cannot find " + id);
 								else if(uniqueSubLists.contains(id)) System.out.println(id + " is already in Sub-Playlists");
 								else {
@@ -566,7 +624,7 @@ public class AppUI {
 							s = sc.nextLine().strip();
 							while(s.equals("")) {s = sc.nextLine().strip();}
 							try {
-								app.createPlaylist(Path.of("Playlists", s + ".txt"), tracks, subLists);
+								fileLogic.createPlaylist(Path.of("Playlists", s + ".txt"), tracks, subLists);
 								System.out.println("Created Playlist " + s);
 								break;
 							} catch (IOException e) {
@@ -579,7 +637,7 @@ public class AppUI {
 				}
 				else if(s.equals("save")) {
 					try {
-						app.save();
+						fileLogic.save();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -592,7 +650,7 @@ public class AppUI {
 				}
 			}
 			try {
-				app.save();
+				fileLogic.save();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -611,6 +669,7 @@ public class AppUI {
 		System.out.println("- plist");
 		System.out.println("- pause");
 		System.out.println("- cont");
+		System.out.println("- vol *%*");
 		System.out.println("- stop");
 		System.out.println("- play *id* [...] [loop] [shuffle] [as *name* \n] run");
 		System.out.println("- resume");
@@ -631,11 +690,11 @@ public class AppUI {
 	}
 	public void printCurrent() {
 		System.out.println();
-		if(app.currentSession != null) {
-			System.out.println("Playlist: " + app.currentSession.getName());
+		if(audio.getCurrentSession() != null) {
+			System.out.println("Playlist: " + audio.getCurrentSession().getName());
 			printPlaylistPreview();
 		}
-		else System.out.println("Soundtrack: " + app.currentTrack.getName());
+		else System.out.println("Soundtrack: " + audio.getCurrentTrack().getName());
 	}
 	public void printSoundtracks(boolean showIDs) {
 		System.out.println("Soundtracks: ");
@@ -664,44 +723,48 @@ public class AppUI {
 				System.out.println("ID: " + id);
 			if(!playlist.description.get().equals(""))
 				System.out.println("Description: " + playlist.description);
-			System.out.println("Length: " + playlist.getAll(app.playlists, new HashSet<String>(), false).size());
+			System.out.println("Length: " + playlist.getAll(fileLogic.playlists, false).size());
 			//System.out.println("Runtime: ?");
 		};
 	}
 	public void printSessions() {
-		app.sessions.forEach((id, session) -> {
+		fileLogic.sessions.forEach((id, session) -> {
 			System.out.println("Name: " + session.getName());
 			System.out.println("ID: " + id);
 		});
 	}
 	public void printPlaylistPreview() {
-		int current = app.currentSession.pos.get();
-		int size = app.currentSession.size();
+		int current = audio.getCurrentSession().pos.get();
+		int size = audio.getCurrentSession().size();
 		
 		int first = current-2 < 0 ? 0 : current-2;
 		int last = current+4 > size ? size: current+4;
 		
 		System.out.println();
 		for(int i = first; i < last; i++) {
-			DataPlaylistEntry dpe = app.currentSession.get(i);
+			DataPlaylistEntry dpe = audio.getCurrentSession().get(i);
 			String id = dpe.id.get();
+			TrackEntry entry = fileLogic.soundtracks.get(id);
+			if(entry == null) continue;
+			
 			if(i == current)
 				System.out.print("> ");
-			System.out.println(i + ": " + app.soundtracks.get(id).getName());
-			if(dpe.getForcedNext() != null && i < last-1 && app.currentSession.get(i+1).id.get().equals(dpe.getForcedNext()))
+			System.out.println(i + ": " + entry.getName());
+			if(dpe.getForcedNext() != null && i < last-1 && audio.getCurrentSession().get(i+1).id.get().equals(dpe.getForcedNext()))
 				System.out.print("-> ");
 		}
 	}
 	public void printPlaylist(Playlist playlist) {
 		int current = -1;
-		if(playlist == app.currentSession) current = app.currentSession.pos.get();
+		if(playlist == audio.getCurrentSession()) current = audio.getCurrentSession().pos.get();
 		
-		List<DataPlaylistEntry> list = playlist.getAll(app.playlists, new HashSet<String>(), false);
+		List<DataPlaylistEntry> list = playlist.getAll(fileLogic.playlists, false);
 		int size = list.size();
 		for(int i = 0; i < size; i++) {
 			DataPlaylistEntry dpe = list.get(i);
 			String id = dpe.id.get();
-			TrackEntry entry = app.soundtracks.get(id);
+			TrackEntry entry = fileLogic.soundtracks.get(id);
+			if(entry == null) continue;
 			
 			if(i == current)
 				System.out.print("> ");
@@ -714,14 +777,14 @@ public class AppUI {
 	//Find functions
 	public Playlist findPlaylist(String s, Scanner sc) {
 		List<Playlist> potentual = new ArrayList<>();
-		Playlist playlist = app.playlists.get(s + ".txt");
+		Playlist playlist = fileLogic.playlists.get(s + ".txt");
 		
 		if(playlist != null) {
 			return playlist;
 		}
 		
-		app.playlists.values().forEach((pl) -> {
-			if(pl.path.toString().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) potentual.add(pl);
+		fileLogic.playlists.values().forEach((pl) -> {
+			if(pl.getName().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) potentual.add(pl);
 		});	
 		
 		int potPos = 0;
@@ -765,12 +828,12 @@ public class AppUI {
 		return ret;
 	}
 	public List<Map.Entry<String, TrackEntry>> tracksSortedByName() {
-		return app.soundtracks.entrySet().stream()
+		return fileLogic.soundtracks.entrySet().stream()
 	            .sorted(Comparator.comparing(e -> e.getValue().getName().toLowerCase()))
 	            .toList();
 	}
 	public List<Map.Entry<String, Playlist>> playlistsSortedByName() {
-		return app.playlists.entrySet().stream()
+		return fileLogic.playlists.entrySet().stream()
 	            .sorted(Comparator.comparing(e -> e.getValue().getName().toLowerCase()))
 	            .toList();
 	}
