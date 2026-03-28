@@ -105,11 +105,19 @@ public class Playlist extends DataAdapter {
 		return ret;
 	}
 	
+	public List<DataString> getSubPlaylists() {
+		return subplaylists;
+	}
 	public void addSubplaylist(String id) {
 		if(!uniquePlaylistSet.contains(id)) {
 			uniquePlaylistSet.add(id);
 			subplaylists.add(new DataString(id));
 		}
+	}
+	public void removeSubplaylist(int pos) {
+		String id = subplaylists.get(pos).get();
+		subplaylists.remove(pos);
+		uniquePlaylistSet.remove(id);
 	}
 	public int size() {
 		return playlist.size();

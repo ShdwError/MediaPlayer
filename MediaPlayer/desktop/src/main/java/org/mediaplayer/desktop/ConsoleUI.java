@@ -57,7 +57,7 @@ public class ConsoleUI extends GenericUI {
 				if(s.equals("menu")) {
 					printMenu();
 				}
-				else if(s.equals("current")) {
+				else if(s.equals("current") || s.equals("c")) {
 					printCurrent();
 				}
 				else if(s.equals("in")) {
@@ -72,7 +72,7 @@ public class ConsoleUI extends GenericUI {
 				}
 				else if(s.equals("list")) {
 					s = sc.next();
-					if(s.equals("current"))
+					if(s.equals("current") || s.equals("c"))
 						printPlaylist(audio.getCurrentSession());
 					else {
 						Playlist playlist = findPlaylist(s, sc);
@@ -115,18 +115,18 @@ public class ConsoleUI extends GenericUI {
 				}
 				else if(s.equals("rename"))  {
 					s = sc.next();
-					if(s.equals("current")) {
+					if(s.equals("current") || s.equals("c")) {
 						String type = sc.next();
 						s = sc.nextLine().strip();
 						while(s.equals("")) s = sc.nextLine().strip();
-						if(type.equals("session")) {
+						if(type.equals("session") || type.equals("ses")) {
 							if(audio.getCurrentSession() != null) {
 								Path newPath = Path.of("Sessions", s + ".txt");
 								fileLogic.renameSession(audio.getCurrentSession(), fileLogic.getFileTree().getNextFreeFileName(newPath));
 								System.out.println("Renaming Session to " + audio.getCurrentSession().getName());
 							}
 						}
-						else if(type.equals("soundtrack")) {
+						else if(type.equals("soundtrack") || type.equals("st")) {
 							if(audio.getCurrentTrack() != null) {
 								Path newPath = Path.of("Soundtracks", s + ".txt");
 								fileLogic.renameSoundtrack(audio.getCurrentTrack(), fileLogic.getFileTree().getNextFreeFileName(newPath));
@@ -136,7 +136,7 @@ public class ConsoleUI extends GenericUI {
 					}
 					else {
 						String type = s;
-						if(type.equals("session")) {
+						if(type.equals("session") || type.equals("ses")) {
 							printSessions();
 							String id = sc.next();
 							Session session = fileLogic.sessions.get(id);
@@ -147,10 +147,11 @@ public class ConsoleUI extends GenericUI {
 							fileLogic.renameSession(session, newPath);
 							System.out.println("Renaming Session to " + session.getName());
 						}
-						else if(type.equals("playlist")) {
+						else if(type.equals("playlist") || type.equals("pl")) {
 							printPlaylists(true);
-							String id = sc.next();
-							Playlist playlist = fileLogic.playlists.get(id);
+							String name = sc.nextLine().strip();
+							while(name.equals("")) name = sc.nextLine().strip();
+							Playlist playlist = findPlaylist(name, sc);
 							if(playlist == null) continue;
 							s = sc.nextLine().strip();
 							while(s.equals("")) s = sc.nextLine().strip();
@@ -158,10 +159,11 @@ public class ConsoleUI extends GenericUI {
 							fileLogic.renamePlaylist(playlist, newPath);
 							System.out.println("Renaming Playlist to " + playlist.getName());
 						}
-						else if(type.equals("soundtrack")) {
+						else if(type.equals("soundtrack") || type.equals("st")) {
 							printSoundtracks(true);
-							String id = sc.next();
-							TrackEntry soundtrack = fileLogic.soundtracks.get(id);
+							String name = sc.nextLine().strip();
+							while(name.equals("")) name = sc.nextLine().strip();
+							TrackEntry soundtrack = findSoundtrack(name, sc);
 							if(soundtrack == null) continue;
 							s = sc.nextLine().strip();
 							while(s.equals("")) s = sc.nextLine().strip();
@@ -184,7 +186,7 @@ public class ConsoleUI extends GenericUI {
 						}
 						else System.out.println("Cannot find Session");
 					}
-					else if(s.equals("playlist")) {
+					else if(s.equals("playlist") || s.equals("pl")) {
 						printPlaylists(true);
 						s = sc.next();
 						Playlist playlist = fileLogic.playlists.get(s);
@@ -194,7 +196,7 @@ public class ConsoleUI extends GenericUI {
 						}
 						else System.out.println("Cannot find Playlist");
 					}
-					else if(s.equals("soundtrack")) {
+					else if(s.equals("soundtrack") || s.equals("st")) {
 						printSoundtracks(true);
 						s = sc.next();
 						TrackEntry entry = fileLogic.soundtracks.get(s);
@@ -204,7 +206,7 @@ public class ConsoleUI extends GenericUI {
 						}
 						else System.out.println("Cannot find Soundtrack");
 					}
-					else if(s.equals("current")) {
+					else if(s.equals("current") || s.equals("c")) {
 						s = sc.next();
 						if(s.equals("session")) {
 							if(audio.getCurrentSession() != null) {
@@ -214,7 +216,7 @@ public class ConsoleUI extends GenericUI {
 							}
 							else System.out.println("No active Session");
 						}
-						else if(s.equals("soundtrack")) {
+						else if(s.equals("soundtrack") || s.equals("st")) {
 							if(audio.getCurrentTrack() != null) fileLogic.deleteSoundtrack(audio.getCurrentTrack());
 							else System.out.println("No active Soundtrack");
 						}
@@ -236,7 +238,7 @@ public class ConsoleUI extends GenericUI {
 						playlist.add(audio.getCurrentSession().getCurrent().copy());
 					}
 				}
-				else if(s.equals("removefrom")) {
+				else if(s.equals("removefrom") || s.equals("rmvfrom")) {
 					if(audio.getCurrentTrack() == null) {
 						System.out.println("No active Soundtrack");
 						continue;
@@ -281,7 +283,7 @@ public class ConsoleUI extends GenericUI {
 				}
 				else if(s.equals("modify"))  {
 					s = sc.next();
-					if(s.equals("playlist")) {
+					if(s.equals("playlist") || s.equals("pl")) {
 						s = sc.nextLine().strip();
 						while(s.equals("")) s = sc.nextLine().strip();
 						Playlist playlist = findPlaylist(s, sc);
@@ -300,13 +302,13 @@ public class ConsoleUI extends GenericUI {
 							System.out.println("- move/copy all *number* [...] to *name*");
 							System.out.println("- move/copy from *number* [to] *number* to *name*");
 							System.out.println("- add playlist *name*");
-							System.out.println("- modify entry *number*");
+							System.out.println("- removeplaylist *number*");
 							System.out.println("- modify entry *number*");
 							System.out.println("- finish");
 							s = sc.next();
-							if((s.equals("remove") || s.equals("move") || s.equals("copy")) && playlist.size() > 0) {
-								boolean copy = s.equals("move") || s.equals("copy");
-								boolean remove = !s.equals("copy");
+							if((s.equals("remove") || s.equals("rmv") || s.equals("move") || s.equals("mv") || s.equals("copy") || s.equals("cpy")) && playlist.size() > 0) {
+								boolean copy = s.equals("move") || s.equals("mv") || s.equals("copy") || s.equals("cpy");
+								boolean remove = !(s.equals("copy") || s.equals("cpy"));
 								List<DataPlaylistEntry> removedTracks = new ArrayList<>();
 								s = sc.next();
 								if(s.equals("all")) { 
@@ -391,7 +393,7 @@ public class ConsoleUI extends GenericUI {
 							}
 							else if(s.equals("add")) {
 								s = sc.next();
-								if(s.equals("playlist")) {
+								if(s.equals("playlist") || s.equals("pl")) {
 									s = sc.nextLine().strip();
 									while(s.equals("")) s = sc.nextLine().strip();
 									Playlist subplaylist = findPlaylist(s, sc);
@@ -403,6 +405,25 @@ public class ConsoleUI extends GenericUI {
 									}
 									else 
 										playlist.addSubplaylist(subplaylist.id);
+								}
+							}
+							else if(s.equals("removeplaylist") || s.equals("rmpl")) {
+								List<DataString> subplaylists = playlist.getSubPlaylists();
+								for(int i = 0; i < subplaylists.size(); i++) {
+									String id = subplaylists.get(i).get();
+									Playlist pl = fileLogic.playlists.get(id);
+									if(pl != null) {
+										System.out.println(i + ":" + pl.getName());
+									}
+								}
+								String pos = sc.next();
+								Integer i = UtilFunctions.getInt(pos);
+								if(i == null) System.out.println(pos + " is not a Number");
+								else if(i < playlist.size() && i >= 0) {
+									playlist.removeSubplaylist(i);
+								}
+								else {
+									System.out.println(i + " is Out of Bounds");
 								}
 							}
 							else if(s.equals("modify")) {
@@ -423,7 +444,7 @@ public class ConsoleUI extends GenericUI {
 											System.out.println("- setnext *number*");
 											System.out.println("- moveto *number*");
 											s = sc.next();
-											if(s.equals("setnext") || s.equals("moveto")) {
+											if(s.equals("setnext") || s.equals("moveto") || s.equals("mvto")) {
 												Integer pos2 = UtilFunctions.getInt(sc.next());
 												if(pos2 == null) {
 													System.out.println("Not a Number");
@@ -443,7 +464,7 @@ public class ConsoleUI extends GenericUI {
 														}
 														playlist.reorganize();
 													}
-													else if(s.equals("moveto")) {
+													else if(s.equals("moveto") || s.equals("mvto")) {
 														//TODO Hier funktioniert noch was nicht ganz
 														DataPlaylistEntry dpe = playlist.get(pos);
 														playlist.remove(pos);
@@ -474,14 +495,21 @@ public class ConsoleUI extends GenericUI {
 							while(s.equals("")) s = sc.nextLine().strip();
 							name = s;
 							ownName = true;
-						} 
+						}
 						else {
-							Playlist playlist = fileLogic.playlists.get(s);
+							Playlist playlist = null;
+							if(s.equals("-s")) {
+								s = sc.nextLine();
+								playlist = findPlaylist(s, sc);
+							}
+							else {
+								playlist = fileLogic.playlists.get(s);
+							}
 							if(playlist != null) {
 								if(!ownName) {
 									if(!name.equals("")) name += "+";
 									
-									name += playlist.getName().replace(".txt", "");
+									name += playlist.getName();
 								}
 								sessionParts.add(playlist);
 							}
@@ -671,7 +699,7 @@ public class ConsoleUI extends GenericUI {
 		System.out.println("- cont");
 		System.out.println("- vol *%*");
 		System.out.println("- stop");
-		System.out.println("- play *id* [...] [loop] [shuffle] [as *name* \n] run");
+		System.out.println("- play [*id*] [-s *name*] [loop] [shuffle] [as *name*] [...] run");
 		System.out.println("- resume");
 		System.out.println("- shuffle");
 		System.out.println("- next");
@@ -777,7 +805,7 @@ public class ConsoleUI extends GenericUI {
 	//Find functions
 	public Playlist findPlaylist(String s, Scanner sc) {
 		List<Playlist> potentual = new ArrayList<>();
-		Playlist playlist = fileLogic.playlists.get(s + ".txt");
+		Playlist playlist = fileLogic.playlists.get(s);
 		
 		if(playlist != null) {
 			return playlist;
@@ -785,6 +813,44 @@ public class ConsoleUI extends GenericUI {
 		
 		fileLogic.playlists.values().forEach((pl) -> {
 			if(pl.getName().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) potentual.add(pl);
+		});	
+		
+		int potPos = 0;
+		if(potentual.size() > 1) {
+			System.out.println("Which one?");
+			for(int i = 0; i < potentual.size(); i++) {
+				System.out.println(i + ":" + potentual.get(i).getName());
+			}
+			String entered = sc.next();
+			Integer i = UtilFunctions.getInt(entered);
+			if(i == null) {
+				System.out.println("Not a Number");
+				return null;
+			}
+			else if(i < potentual.size() && i >= 0) {
+				potPos = i;
+			}
+			else {
+				System.out.println("Out of Bounds");
+				return null;
+			}
+		}
+		else if(potentual.size() == 0) {
+			System.out.println("No entry found");
+			return null;
+		}
+		return potentual.get(potPos);
+	}
+	public TrackEntry findSoundtrack(String s, Scanner sc) {
+		List<TrackEntry> potentual = new ArrayList<>();
+		TrackEntry entry = fileLogic.soundtracks.get(s);
+		
+		if(entry != null) {
+			return entry;
+		}
+		
+		fileLogic.soundtracks.values().forEach((st) -> {
+			if(st.getName().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) potentual.add(st);
 		});	
 		
 		int potPos = 0;
@@ -824,7 +890,7 @@ public class ConsoleUI extends GenericUI {
 			}
 			ret.add(s);
 			s = sc.next();
-		} while(!(s.equals(";") || stop));
+		} while(!(s.equals(till) || stop));
 		return ret;
 	}
 	public List<Map.Entry<String, TrackEntry>> tracksSortedByName() {

@@ -1,5 +1,0 @@
-rootProject.name = "org.mediaplayer"
-
-include("core")
-include("desktop")
-include("android")
