@@ -35,8 +35,8 @@ public class ConsoleUI extends GenericUI {
 		this.fileLogic = (DesktopFileLogic) app.fileLogic;
 	}
 	public void startUI() {
-		Scanner sc = new Scanner(System.in);
 		//Thread because of Scanner
+		Scanner sc = new Scanner(System.in);
 		new Thread(() -> {
 			String s = "";
 			DataString currentSession = fileLogic.getCurrentSessionData();
