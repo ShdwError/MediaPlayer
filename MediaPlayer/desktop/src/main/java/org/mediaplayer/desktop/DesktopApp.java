@@ -1,21 +1,20 @@
 package org.mediaplayer.desktop;
 
+import org.mediaplayer.core.Generics.GenericFileLogic;
+
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.mediaplayer.core.App;
-
-public class DesktopApp extends App {
-
+public class DesktopApp {
+	public ConsoleUI ui;
 	public DesktopApp(Path path) throws IOException {
-		super(path);
-		this.fileLogic = new DesktopFileLogic(path);
-		this.ui = new ConsoleUI();
-		this.audio = new DesktopAudio(path);
+		DesktopFileLogic fileLogic = new DesktopFileLogic(path);
+		ConsoleUI ui = new ConsoleUI();
+		DesktopAudio audio = new DesktopAudio(path);
 		
-		fileLogic.create(this);
-		ui.create(this);
-		audio.create(this);
+		fileLogic.create(ui, audio);
+		ui.create(audio, fileLogic);
+		audio.create(fileLogic, ui);
 		
 		ui.startUI();
 	}

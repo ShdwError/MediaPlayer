@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-public class FileManager {
+public class FileManager extends GenericFileManager {
 
     private final Path path;
 
@@ -14,11 +14,11 @@ public class FileManager {
         Files.createDirectories(path.getParent());
         this.path = path;
 
-        if (Files.notExists(path)) {
+        if(Files.notExists(path)) {
             Files.createFile(path);
         }
     }
-
+    @Override
     public List<String> read() throws IOException {
         return Files.readAllLines(path);
     }

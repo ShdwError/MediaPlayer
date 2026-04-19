@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="current_session">Current Session</string>
+    <string name="sessions">Sessions</string>
+    <string name="playlists">Playlists</string>
+    <string name="soundtracks">Soundtracks</string>
+
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+</resources>

@@ -7,10 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FileTree {
+public class FileTree extends GenericFileTree {
 
     private final Path root;
-    private final Map<Path, FileManager> files;
+    private final Map<Path, GenericFileManager> files;
 
     public FileTree(Path root) throws IOException {
         this.root = root;
@@ -41,6 +41,7 @@ public class FileTree {
         files.put(relativePath, fm);
         return fm;
     }
+    @Override
     public FileManager rename(Path oldRelative, Path newRelative) throws IOException {
     	Path oldAbs = root.resolve(oldRelative);
     	Path newAbs = root.resolve(newRelative);
@@ -64,7 +65,7 @@ public class FileTree {
     public Path getNextFreeFileName(Path relativePath) {
         Path path = root.resolve(relativePath);
         if(Files.notExists(path)) {
-        	return root.relativize(path);
+        	return relativePath;
         }
         String fileName = path.getFileName().toString();
         String[] nameAndType = Util.getNameAndType(fileName);
@@ -76,22 +77,22 @@ public class FileTree {
         	if(Files.notExists(newPath)) return root.relativize(newPath);
         }
     }
-    public Path createFolder(Path relativePath) throws IOException {
+    public void createFolder(Path relativePath) throws IOException {
         Path folder = root.resolve(relativePath);
-        return Files.createDirectories(folder);
+        Files.createDirectories(folder);
     }
-    public FileManager get(Path relativePath) {
+    public GenericFileManager get(Path relativePath) {
         return files.get(relativePath);
     }
-    public FileManager getOrCreate(Path relativePath) {
+    public GenericFileManager getOrCreate(Path relativePath)  {
     	return getOrCreateManager(root.resolve(relativePath));
     }
     
-    public List<FileManager> getAll(Path relativePath) throws IOException {
+    public List<GenericFileManager> getAll(Path relativePath) throws IOException {
     	return Files.walk(root.resolve(relativePath)).
     			filter(Files::isRegularFile).map(this::getOrCreateManager).toList();
     }
-    private FileManager getOrCreateManager(Path absPath){
+    private GenericFileManager getOrCreateManager(Path absPath){
     	Path relativePath = root.relativize(absPath);
     	if(files.containsKey(relativePath)) return files.get(relativePath);
     	try {
@@ -104,7 +105,7 @@ public class FileTree {
 		}
     	return null;
     }
-    public Map<Path, FileManager> get() {
+    public Map<Path, GenericFileManager> get() {
         return files;
     }
     public Path getPath() {
