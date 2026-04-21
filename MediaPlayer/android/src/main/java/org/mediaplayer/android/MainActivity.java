@@ -54,60 +54,6 @@ public class MainActivity extends AppCompatActivity {
         Log.println(Log.ASSERT, "Test", "Finish");
 
         this.ui.start();
-
-        setContentView(R.layout.activity_main);
-
-        sidebar = findViewById(R.id.sidebar);
-        sidebar.setLayoutManager(new LinearLayoutManager(this));
-
-        navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                item.setChecked(true);
-
-                FrameLayout frame = findViewById(R.id.content_frame);
-                frame.removeAllViews();
-
-                int id = item.getItemId();
-                if(id == R.id.nav_current_session) {
-
-                }
-                else if(id == R.id.nav_sessions) {
-
-                }
-                else if(id == R.id.nav_playlists) {
-                    Menu menu = navigationView.getMenu();
-                    SubMenu subMenu = item.getSubMenu();
-                    subMenu.clear();
-
-                    for(Playlist playlist : fileLogic.playlistsSortedByName()) {
-                        subMenu.add(
-                                Menu.NONE,
-                                Menu.NONE,
-                                Menu.NONE,
-                                playlist.getName()
-                        );
-                    }
-                }
-                else if(id == R.id.nav_soundtracks) {
-                    View view = getLayoutInflater().inflate(R.layout.soundtracks_content, null);
-                    frame.addView(view);
-
-                    RecyclerView recycler = view.findViewById(R.id.soundtracks_list);
-                    recycler.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-
-                    SoundtracksAdapter adapter = new SoundtracksAdapter(fileLogic.tracksSortedByName(), entry -> {
-                        audio.playSoundtrack(entry);
-                    });
-
-                    recycler.setAdapter(adapter);
-                }
-
-                return true;
-            }
-        });
     }
 
     @Override
@@ -116,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             fileLogic.save();
             audio.closePlayer();
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

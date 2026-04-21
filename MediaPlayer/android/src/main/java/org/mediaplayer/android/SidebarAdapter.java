@@ -1,10 +1,12 @@
 package org.mediaplayer.android;
 
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ViewHolder> {
@@ -15,6 +17,7 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ViewHold
 
     public SidebarAdapter(List<SidebarItem> rootItems, OnItemClick listener) {
         this.rootItems = rootItems;
+        this.visibleItems = new ArrayList<>();
         this.listener = listener;
         rebuildList();
     }
@@ -41,17 +44,21 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ViewHold
 
         holder.textView.setText(item.title);
 
-        if(!item.isHeader) {
+        if(item.isHeader) {
+            holder.textView.setPadding(40, 30, 40, 30);
+            holder.textView.setTextSize(16);
+        }
+        else {
             holder.textView.setPadding(80, 30, 40, 30);
+            holder.textView.setTextSize(14);
         }
 
         holder.textView.setOnClickListener(v -> {
             if(item.isHeader) {
                 item.isExpanded = !item.isExpanded;
                 rebuildList();
-            } else {
-                listener.onClick(item);
             }
+            listener.onClick(item);
         });
     }
     @Override

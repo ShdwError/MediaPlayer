@@ -21,7 +21,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/sidebar"
-            android:layout_width="200dp"
+            android:layout_width="120dp"
             android:layout_height="match_parent"
             android:background="#EEEEEE"/>
 
