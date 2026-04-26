@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
             this.ui = new AndroidUI(this);
 
             this.fileLogic.create(audio);
-            this.audio.create(fileLogic);
+            this.audio.create(fileLogic, ui);
             this.ui.create(audio, fileLogic);
         } catch (IOException e) {
             throw new RuntimeException(e);

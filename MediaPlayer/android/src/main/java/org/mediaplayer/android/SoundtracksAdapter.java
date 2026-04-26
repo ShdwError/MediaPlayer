@@ -32,8 +32,6 @@ public class SoundtracksAdapter extends RecyclerView.Adapter<SoundtracksAdapter.
     public void onBindViewHolder(ViewHolder holder, int position) {
         TrackEntry entry = list.get(position);
 
-
-
         holder.textView.setText(entry.getName());
         holder.itemView.setOnClickListener(v -> onClick.accept(entry));
     }

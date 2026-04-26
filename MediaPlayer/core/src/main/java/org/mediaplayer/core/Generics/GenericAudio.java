@@ -31,6 +31,7 @@ public abstract class GenericAudio {
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 		if(entry != null) {
 			playAndSetNext(entry);
+			onPlayTrack(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");
@@ -53,10 +54,9 @@ public abstract class GenericAudio {
 		}
 
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
-		onPlayTrack(entry);
-
 		if(entry != null) {
 			playAndSetNext(entry);
+			onPlayTrack(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");
@@ -70,17 +70,15 @@ public abstract class GenericAudio {
 		if(!hasPlayer() || currentSession == null) return;
 
 		DataPlaylistEntry dpe = currentSession.moveTo(pos);
-
 		if(dpe == null) {
 			System.out.println("Out of Bounds");
 			return;
 		}
 
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
-		onPlayTrack(entry);
-
 		if(entry != null) {
 			playAndSetNext(entry);
+			onPlayTrack(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");
@@ -100,10 +98,9 @@ public abstract class GenericAudio {
 		}
 
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
-		onPlayTrack(entry);
-
 		if(entry != null) {
 			playAndSetNext(entry);
+			onPlayTrack(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");

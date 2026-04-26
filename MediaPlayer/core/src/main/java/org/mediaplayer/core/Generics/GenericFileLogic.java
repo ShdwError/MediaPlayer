@@ -401,4 +401,12 @@ public abstract class GenericFileLogic {
 				.sorted(Comparator.comparing(p -> p.getName().toLowerCase()))
 				.toList();
 	}
+	public int playlistLength(Playlist playlist) {
+		int ret = 0;
+		for(DataPlaylistEntry dpe: playlist.getAll(playlists, false)) {
+			TrackEntry entry = soundtracks.get(dpe.id.get());
+			ret += entry.length.get();
+		}
+		return ret;
+	}
 }

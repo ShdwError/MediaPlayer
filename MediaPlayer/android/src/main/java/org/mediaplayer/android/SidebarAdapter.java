@@ -22,6 +22,7 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ViewHold
         rebuildList();
     }
     private void rebuildList() {
+        //TODO Sub-Lists?
         visibleItems.clear();
         for(SidebarItem item : rootItems) {
             visibleItems.add(item);

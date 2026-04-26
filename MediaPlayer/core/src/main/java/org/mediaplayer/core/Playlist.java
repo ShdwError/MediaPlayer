@@ -145,10 +145,10 @@ public class Playlist extends DataAdapter {
 		boolean hasForced = false;
 	    Set<String> forcedTargets = new HashSet<>();
 	    
-	    for (DataPlaylistEntry e : get()) {
+	    for(DataPlaylistEntry e : get()) {
 	        entryMap.put(e.id.get(), e);
 	        if(e.getForcedNext() != null) {
-	        	hasForced = true;
+				hasForced = true;
 	            forcedTargets.add(e.getForcedNext());
 	        }
 	    }

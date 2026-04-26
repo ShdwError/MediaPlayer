@@ -15,18 +15,23 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 public class AndroidAudio extends GenericAudio {
     private MediaPlayer mediaPlayer;
     private Context context;
 
     private float volume;
+    private boolean running;
+
+    private AndroidUI ui;
     public AndroidAudio(Context context, Path path) {
         super();
 
         this.path = path;
         this.context = context;
         this.volume = 1;
+        this.running = false;
 
         AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         am.setStreamVolume(AudioManager.STREAM_MUSIC, am.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
@@ -35,13 +40,23 @@ public class AndroidAudio extends GenericAudio {
         this.mediaPlayer = new MediaPlayer();
     }
 
-    public void create(GenericFileLogic fileLogic) {
+    public void create(GenericFileLogic fileLogic, AndroidUI ui) {
         this.fileLogic = fileLogic;
+        this.ui = ui;
+    }
+
+    public void playSingleSoundtrack(TrackEntry entry)  {
+        playSoundtrack(entry);
+        mediaPlayer.setOnCompletionListener((mp) -> {
+            running = false;
+            onTrackEnd(entry);
+        });
     }
 
     @Override
     public void playSoundtrack(TrackEntry entry) {
         currentTrack = entry;
+        running = true;
 
         closePlayer();
         mediaPlayer = new MediaPlayer();
@@ -63,6 +78,7 @@ public class AndroidAudio extends GenericAudio {
         playSoundtrack(entry);
 
         mediaPlayer.setOnCompletionListener((mp) -> {
+            onTrackEnd(entry);
             playNextTrack();
         });
     }
@@ -89,13 +105,25 @@ public class AndroidAudio extends GenericAudio {
     }
     @Override
     public void play() {
-        if(mediaPlayer != null)
+        if(mediaPlayer != null) {
             mediaPlayer.start();
+            this.running = true;
+        }
     }
     @Override
     public void pause() {
-        if(mediaPlayer != null)
+        if(mediaPlayer != null) {
             mediaPlayer.pause();
+            this.running = false;
+        }
+    }
+    public boolean switchRunning() {
+        if(isRunning()) pause();
+        else play();
+        return running;
+    }
+    public boolean isRunning() {
+        return running;
     }
 
     @Override
@@ -130,11 +158,27 @@ public class AndroidAudio extends GenericAudio {
 
     @Override
     public void onPlayTrack(TrackEntry entry) {
+        ui.onSessionTrack(entry);
+    }
 
+    public void onTrackEnd(TrackEntry entry) {
+        ui.onSoundtrackEnd(entry);
     }
 
     @Override
     public void onPlaylistEnd() {
-
     }
+
+    public String formatTime(int sec) {
+        int s = sec % 60;
+        sec /= 60;
+        int m = sec % 60;
+        sec /= 60;
+        int h = sec;
+
+        if(h != 0) return h + ":" + String.format(Locale.getDefault(), "%02d", m) + ":" + String.format(Locale.getDefault(), "%02d", s);
+        else return m + ":" + String.format(Locale.getDefault(), "%02d", s);
+    }
+
+
 }
