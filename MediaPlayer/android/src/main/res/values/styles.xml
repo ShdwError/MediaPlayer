@@ -6,7 +6,7 @@
 
     </style>
     <style name="DrawerMenuText" parent="TextAppearance.AppCompat.Body1">
-        <item name="android:textSize">10sp</item>
+        <item name="android:textSize">4sp</item>
     </style>
 
 </resources>

@@ -7,4 +7,6 @@
 
     <string name="open">Open</string>
     <string name="close">Close</string>
+    <string name="done">Done</string>
+    <string name="back">Back</string>
 </resources>
