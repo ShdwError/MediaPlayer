@@ -72,7 +72,7 @@ public abstract class GenericFileLogic {
 	public abstract GenericFileTree createFileTree() throws IOException;
 	
 	//Create Functions
-	public void createPlaylist(Path path, List<String> ids, List<String> subIds) throws IOException {
+	public Playlist createPlaylist(Path path, List<String> ids, List<String> subIds) throws IOException {
 		String id = UUID.randomUUID().toString();
 		plData.playlists.put(id, new DataString(path.toString()));
 		GenericFileManager fm = fTree.createFile(path);
@@ -91,6 +91,7 @@ public abstract class GenericFileLogic {
 		playlist.reorganize();
 		playlist.dataContainer.system.save();
 		plData.dataContainer.system.save();
+		return playlist;
 	}
 	public Session createSession(List<Playlist> sessionParts, Path path, boolean looping, boolean shuffle) throws IOException {
 		String id = UUID.randomUUID().toString();
