@@ -159,6 +159,14 @@ public class AndroidAudio extends GenericAudio {
     @Override
     public void onPlayTrack(TrackEntry entry) {
         ui.onSessionTrack(entry);
+
+        if(currentSession.dataContainer != null) {
+            try {
+                currentSession.dataContainer.system.save();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void onTrackEnd(TrackEntry entry) {

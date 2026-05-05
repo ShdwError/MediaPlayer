@@ -1,29 +1,27 @@
 package org.mediaplayer.android;
 
-import android.content.Context;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
 
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 public class AndroidUI implements
         PlaylistCreationDialogFragment.OnPlaylistCreationClick,
@@ -45,6 +43,8 @@ public class AndroidUI implements
 
     private SidebarItem currentSidebarItem;
 
+    private RecyclerView sessionRecycler;
+
     private PlaylistAdapter playlistAdapter;
     private SubplaylistsAdapter subplaylistsAdapter;
 
@@ -61,9 +61,9 @@ public class AndroidUI implements
         sidebar = app.findViewById(R.id.sidebar);
         sidebar.setLayoutManager(new LinearLayoutManager(app));
 
-        this.sessions = new SidebarItem("Sessions", "sessions", true, true);
-        this.playlists = new SidebarItem("Playlists", "playlists", true, true);
-        this.soundtracks = new SidebarItem("Soundtracks", "soundtracks", true, false);
+        this.sessions = new SidebarItem("Sessions", "sessions", true);
+        this.playlists = new SidebarItem("Playlists", "playlists", true);
+        this.soundtracks = new SidebarItem("Soundtracks", "soundtracks", true);
 
         createPlaylistsItem();
         createSessionsItem();
@@ -80,14 +80,16 @@ public class AndroidUI implements
 
     private void createSessionsItem() {
         sessions.items.clear();
+        sessions.items.add(new SidebarItem("+", "add_session", false));
         for(Session session: fileLogic.sessions.values()) {
-            sessions.items.add(new SidebarItem(session.getName(), session.id, false, false));
+            sessions.items.add(new SidebarItem(session.getName(), session.id, false));
         }
     }
     private void createPlaylistsItem() {
         playlists.items.clear();
+        playlists.items.add(new SidebarItem("+", "add_playlist", false));
         for(Playlist playlist: fileLogic.playlistsSortedByName()) {
-            playlists.items.add(new SidebarItem(playlist.getName(), playlist.id, false, false));
+            playlists.items.add(new SidebarItem(playlist.getName(), playlist.id, false));
         }
     }
 
@@ -106,6 +108,9 @@ public class AndroidUI implements
         });
 
         recycler.setAdapter(adapter);
+
+        //clean up
+        sessionRecycler = null;
     }
     public void showPlaylist(String id) {
         FrameLayout frame = app.findViewById(R.id.content_frame);
@@ -120,7 +125,8 @@ public class AndroidUI implements
         TextView title = view.findViewById(R.id.playlist_title);
         TextView size = view.findViewById(R.id.playlist_size);
         TextView length = view.findViewById(R.id.playlist_length);
-        TextView play = view.findViewById(R.id.play_playlist);
+        ImageView play = view.findViewById(R.id.play_playlist);
+        ImageView delete = view.findViewById(R.id.delete_playlist);
 
         title.setText(playlist.getName());
         size.setText("Size: " + playlist.getAll(fileLogic.playlists, false).size());
@@ -128,6 +134,13 @@ public class AndroidUI implements
 
         play.setOnClickListener(v -> {
 
+        });
+        delete.setOnClickListener(v -> {
+            fileLogic.deletePlaylist(playlist);
+            playlistAdapter = null;
+            subplaylistsAdapter = null;
+            frame.removeAllViews();
+            sidebarAdapter.delete(playlists, id);
         });
 
         //Entries
@@ -147,6 +160,9 @@ public class AndroidUI implements
         subplaylistsAdapter = new SubplaylistsAdapter(playlist, fileLogic, this, audio);
 
         subplaylists.setAdapter(subplaylistsAdapter);
+
+        //clean up
+        sessionRecycler = null;
     }
 
     public void showSession(String id) {
@@ -163,9 +179,10 @@ public class AndroidUI implements
         TextView size = view.findViewById(R.id.playlist_size);
         TextView length = view.findViewById(R.id.playlist_length);
 
-        TextView play = view.findViewById(R.id.play_session);
+        ImageView play = view.findViewById(R.id.play_session);
         TextView shuffle = view.findViewById(R.id.shuffle_session);
         TextView loop = view.findViewById(R.id.loop_session);
+        ImageView delete = view.findViewById(R.id.delete_session);
 
         title.setText(session.getName());
         size.setText("Size: " + session.size());
@@ -176,8 +193,8 @@ public class AndroidUI implements
         });
 
         //Entries
-        RecyclerView entries = view.findViewById(R.id.session_tracks);
-        entries.setLayoutManager(new LinearLayoutManager(app.getApplicationContext()));
+        this.sessionRecycler = view.findViewById(R.id.session_tracks);
+        sessionRecycler.setLayoutManager(new LinearLayoutManager(app.getApplicationContext()));
 
         playlistAdapter = new PlaylistAdapter(session, fileLogic, audio, (entry, pos) ->  {
             if(audio.getCurrentSession() != session)
@@ -186,18 +203,22 @@ public class AndroidUI implements
             playlistAdapter.notifyItemChanged(pos);
         });
 
-        entries.setAdapter(playlistAdapter);
+        sessionRecycler.setAdapter(playlistAdapter);
+
+        if(audio.getCurrentSession() == session) {
+
+        }
     }
 
     public void createNewPlaylistPopup() {
         List<PlaylistCreationSearchItem> items = new ArrayList<>();
         for(TrackEntry trackEntry: fileLogic.tracksSortedByName()) {
             items.add(new PlaylistCreationSearchItem("s", trackEntry.getName(),
-                    trackEntry.length.get(), trackEntry.id));
+                    audio.formatTime(trackEntry.length.get()), trackEntry.id));
         }
         for(Playlist playlist: fileLogic.playlistsSortedByName()) {
             items.add(new PlaylistCreationSearchItem("p", playlist.getName(),
-                    playlist.size(), playlist.id));
+                    "" + playlist.size(), playlist.id));
         }
 
         PlaylistCreationDialogFragment dialog = new PlaylistCreationDialogFragment(app,
@@ -209,12 +230,25 @@ public class AndroidUI implements
         playlistAdapter.onSoundtrackEnd(entry);
     }
     public void onSessionTrack(TrackEntry entry) {
-        playlistAdapter.notifyItemChanged(audio.getCurrentSession().pos.get());
+        int pos = audio.getCurrentSession().pos.get();
+        playlistAdapter.notifyItemChanged(pos);
+
+        if(sessionRecycler != null) {
+            LinearLayoutManager lm = (LinearLayoutManager) sessionRecycler.getLayoutManager();
+            lm.scrollToPositionWithOffset(pos, 500);
+        }
+    }
+
+    public void moveToPlaylistPos(int pos) {
+
     }
 
     @Override
     public void onSidebarClick(SidebarItem item) {
-        if(item.id.equals("soundtracks")) {
+        if(item.id.equals("add_playlist")) {
+            createNewPlaylistPopup();
+        }
+        else if(item.id.equals("soundtracks")) {
             currentSidebarItem = item;
             showSoundtracks();
         }
@@ -228,14 +262,37 @@ public class AndroidUI implements
         }
     }
     @Override
-    public void onAddClick(SidebarItem item) {
-        if(item.id.equals("playlists")) {
-            createNewPlaylistPopup();
-        }
-    }
-
-    @Override
     public void onPlaylistCreationAttempt(String name, String path, List<PlaylistCreationSearchItem> items) {
         Log.println(Log.ASSERT, "Test", name + ", " + path + "," + items);
+        path = path.replace("\\", "/");
+
+        Path completePath = Path.of("Playlists", path, name + ".txt");
+        List<String> entriesToAdd = new ArrayList<>();
+        List<String> playlistsToAdd = new ArrayList<>();
+
+        for(PlaylistCreationSearchItem item: items) {
+            if(item.type.equals("s")) {
+                entriesToAdd.add(item.id);
+            }
+            else if(item.type.equals("p")) {
+                playlistsToAdd.add(item.id);
+            }
+            else {
+                Log.println(Log.ASSERT, "Test", "Wrong type?");
+            }
+        }
+        try {
+            Playlist playlist = fileLogic.createPlaylist(completePath, entriesToAdd, playlistsToAdd);
+            int pos = playlists.addSorted(new SidebarItem(playlist.getName(), playlist.id, false));
+            sidebarAdapter.expand(playlists);
+
+            LinearLayoutManager lm = (LinearLayoutManager) sidebar.getLayoutManager();
+            lm.scrollToPositionWithOffset(pos, 500);
+
+            showPlaylist(playlist.id);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -32,17 +32,32 @@ public class PlaylistCreationSearchAdapter
 
     public void filterBy(String filter) {
         this.filter = filter;
-        visible = new ArrayList<>();
         if(filter.isEmpty()) {
             visible = items;
         }
         else {
+            visible = new ArrayList<>();
+            filter = filter.toLowerCase();
             for(PlaylistCreationSearchItem item : items) {
-                if(item.name.contains(filter)) {
+                if(item.name.toLowerCase().contains(filter)) {
                     visible.add(item);
                 }
             }
         }
+        notifyDataSetChanged();
+    }
+    public void addItemSorted(PlaylistCreationSearchItem toAdd) {
+        boolean added = false;
+        for(int i = 0; i < items.size(); i++) {
+            if(toAdd.name.compareTo(items.get(i).name) <= 0) {
+                items.add(i, toAdd);
+                added = true;
+                break;
+            }
+        }
+        if(!added) items.add(toAdd);
+        filterBy(this.filter);
+
         notifyDataSetChanged();
     }
     public void addItem(PlaylistCreationSearchItem item) {

@@ -1,5 +1,5 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -48,14 +48,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <!-- Start Button -->
-            <TextView
+            <ImageView
                 android:id="@+id/play_session"
-                android:text="▶"
-                android:textSize="18sp"
-                android:textColor="@android:color/holo_green_dark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"/>
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/play_arrow"
+                app:tint="@android:color/holo_green_dark"/>
 
             <!-- Shuffle Button -->
             <TextView
@@ -76,14 +74,13 @@
                 android:layout_height="wrap_content"/>
 
             <!-- Delete Button -->
-            <TextView
+            <ImageView
                 android:id="@+id/delete_session"
-                android:text="D"
-                android:textSize="18sp"
-                android:textColor="@android:color/holo_red_dark"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_marginStart="20dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:src="@drawable/delete_button"
+                app:tint="@android:color/holo_red_dark"/>
         </LinearLayout>
     </LinearLayout>
 

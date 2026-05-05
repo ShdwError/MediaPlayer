@@ -55,16 +55,30 @@ public class MainActivity extends AppCompatActivity {
 
         this.ui.start();
     }
+    public void save(){
+        try {
+            fileLogic.save();
+        }
+        catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     protected void onStop() {
         super.onStop();
-        try {
-            fileLogic.save();
-            audio.closePlayer();
+        save();
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        save();
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        if(isFinishing())
+            audio.closePlayer();
     }
 }

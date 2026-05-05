@@ -1,5 +1,6 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:padding="12dp"
     android:layout_width="match_parent"
@@ -8,14 +9,15 @@
     <TextView
         android:id="@+id/track_number"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" />
 
-    <TextView
+    <ImageView
         android:id="@+id/track_play"
-        android:text="▶"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
         android:layout_marginStart="12dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:src="@drawable/play_arrow"
+        app:tint="@android:color/darker_gray" />
 
     <TextView
         android:id="@+id/track_name"

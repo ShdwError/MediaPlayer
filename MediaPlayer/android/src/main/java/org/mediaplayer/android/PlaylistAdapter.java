@@ -1,12 +1,15 @@
 package org.mediaplayer.android;
 
 import android.annotation.SuppressLint;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.media.Image;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -61,12 +64,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
         if(audio.isRunning() && audio.getCurrentTrack() == entry) {
             currentlyRunning = pos;
-            holder.play.setText("⏸");
-            holder.play.setTextColor(Color.RED);
+            holder.play.setImageResource(R.drawable.pause_button);
         }
         else {
-            holder.play.setText("▶");
-            holder.play.setTextColor(Color.GRAY);
+            holder.play.setImageResource(R.drawable.play_arrow);
         }
 
         holder.play.setOnClickListener(v -> {
@@ -104,7 +105,9 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView number, name, length, play, menu;
+        TextView number, name, length;
+        ImageView play;
+        TextView menu;
 
         public ViewHolder(View view) {
             super(view);

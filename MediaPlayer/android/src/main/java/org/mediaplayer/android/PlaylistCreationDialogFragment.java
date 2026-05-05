@@ -32,6 +32,7 @@ public class PlaylistCreationDialogFragment extends DialogFragment {
     private String nameDefault, pathDefault;
 
     private List<PlaylistCreationSearchItem> items;
+    private List<PlaylistCreationSearchItem> defaultItems;
     private AppCompatActivity app;
 
     public PlaylistCreationDialogFragment(AppCompatActivity app, List<PlaylistCreationSearchItem> items,
@@ -39,15 +40,29 @@ public class PlaylistCreationDialogFragment extends DialogFragment {
         this.app = app;
         this.items = items;
         this.listener = listener;
+        this.defaultItems = new ArrayList<>();
     }
     public PlaylistCreationDialogFragment(AppCompatActivity app, List<PlaylistCreationSearchItem> items,
                                           OnPlaylistCreationClick listener, String nameDefault,
-                                          String pathDefault) {
+                                          String pathDefault, List<PlaylistCreationSearchItem> defaultItems) {
         this.app = app;
         this.items = items;
         this.listener = listener;
         this.nameDefault = nameDefault;
         this.pathDefault = pathDefault;
+        this.defaultItems = defaultItems;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (getDialog() != null) {
+            int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+            int height = (int) (getResources().getDisplayMetrics().heightPixels * 0.8);
+
+            getDialog().getWindow().setLayout(width, height);
+        }
     }
 
     @Nullable
@@ -72,7 +87,10 @@ public class PlaylistCreationDialogFragment extends DialogFragment {
 
         this.itemsSelected = view.findViewById(R.id.playlist_items_selected);
         this.itemsSelected.setLayoutManager(new LinearLayoutManager(app.getApplicationContext()));
-        this.selectedAdapter = new PlaylistCreationSearchAdapter(new ArrayList<>(), null);
+        this.selectedAdapter = new PlaylistCreationSearchAdapter(defaultItems, (item) -> {
+            searchAdapter.addItemSorted(item);
+            selectedAdapter.removeItem(item);
+        });
         this.itemsSelected.setAdapter(this.selectedAdapter);
 
         this.itemSearchList = view.findViewById(R.id.playlist_item_search_list);
@@ -110,6 +128,7 @@ public class PlaylistCreationDialogFragment extends DialogFragment {
             List<PlaylistCreationSearchItem> items = selectedAdapter.getItems();
 
             listener.onPlaylistCreationAttempt(name, path, items);
+            dismiss();
         });
     }
 
