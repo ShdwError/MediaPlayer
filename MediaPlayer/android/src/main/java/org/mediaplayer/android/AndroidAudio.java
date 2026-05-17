@@ -147,13 +147,14 @@ public class AndroidAudio extends GenericAudio {
         player.setOnPreparedListener(mp -> {
             int sec = player.getDuration()/1000;
             entry.length.set(sec);
+            Log.i("Test", entry.getName() + ":" + sec);
             player.release();
         });
         player.prepareAsync();
     }
     @Override
     public void onError(String error) {
-
+        Log.e("Error", error);
     }
 
     @Override

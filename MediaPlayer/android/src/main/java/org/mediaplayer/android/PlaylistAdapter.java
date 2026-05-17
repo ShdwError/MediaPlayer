@@ -1,14 +1,9 @@
 package org.mediaplayer.android;
 
 import android.annotation.SuppressLint;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
-import android.media.Image;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -18,8 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.TrackEntry;
-
-import java.util.Locale;
 
 public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> {
     private Playlist playlist;
@@ -41,6 +34,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         this.listener = listener;
     }
 
+    @NonNull
     @Override
     public PlaylistAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View view = LayoutInflater.from(viewGroup.getContext())
@@ -50,7 +44,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
     @Override
     @SuppressLint("RecyclerView")
-    public void onBindViewHolder(ViewHolder holder, int pos) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int pos) {
         DataPlaylistEntry dpe = playlist.get(pos);
         TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
         if(entry == null) {
@@ -72,10 +66,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
         holder.play.setOnClickListener(v -> {
             if(audio.getCurrentTrack() == entry) {
-                if(audio.isRunning())
-                    audio.pause();
-                else
-                    audio.play();
+                audio.switchRunning();
             }
             else {
                 if(audio.isRunning()) {

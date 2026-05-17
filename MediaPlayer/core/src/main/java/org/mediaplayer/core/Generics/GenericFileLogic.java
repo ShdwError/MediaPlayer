@@ -169,9 +169,7 @@ public abstract class GenericFileLogic {
 	public TrackEntry readEntry(TrackEntry entry, GenericFileManager fm) {
 		if(fm != null) {
 			DataSystem ds = new DataSystem(fm);
-			ds.setAdapter(() -> {
-				return entry;
-				});
+			ds.setAdapter(() -> entry);
 			ds.addContainerData("Description", new DataString());
 			ds.addContainerData("Length", new DataInt());
 			try {
@@ -184,15 +182,17 @@ public abstract class GenericFileLogic {
 				audio.setMediaLength(entry);
 			}
 		}
+		else {
+			entry.length = new DataInt();
+			audio.setMediaLength(entry);
+		}
 		return entry;
 	}
 
 	public Playlist readPlaylist(GenericFileManager fm, Path path, String id) {
 		if(fm != null) {
 			DataSystem ds = new DataSystem(fm);
-			ds.setAdapter(() -> {
-				return new Playlist(path, id);
-				});
+			ds.setAdapter(() -> new Playlist(path, id));
 			ds.addContainerData("Description", new DataString());
 			ds.addContainerData("Playlist", new DataArray<DataPlaylistEntry>(DataPlaylistEntry::new));
 			ds.addContainerData("Subplaylists", new DataArray<DataString>(DataString::new));
@@ -348,7 +348,7 @@ public abstract class GenericFileLogic {
 		List<GenericFileManager> files = fTree.getAll(Path.of("Soundtracks"));
 		for(GenericFileManager f: files) {
 			Path relativePath = fTree.getPath().relativize(f.getPath());
-			String[] split = Util.getNameAndType(f.getPath().toString());
+			String[] split = Util.getNameAndType(relativePath.toString());
 			if(!split[1].equals(".txt")) {
 				String id = UUID.randomUUID().toString();
 				TrackEntry entry = new TrackEntry(relativePath, id);
@@ -406,7 +406,8 @@ public abstract class GenericFileLogic {
 		int ret = 0;
 		for(DataPlaylistEntry dpe: playlist.getAll(playlists, false)) {
 			TrackEntry entry = soundtracks.get(dpe.id.get());
-			ret += entry.length.get();
+			if(entry != null)
+				ret += entry.length.get();
 		}
 		return ret;
 	}
