@@ -9,4 +9,6 @@
     <string name="close">Close</string>
     <string name="done">Done</string>
     <string name="back">Back</string>
+    <string name="name">Name</string>
+    <string name="path">Path</string>
 </resources>

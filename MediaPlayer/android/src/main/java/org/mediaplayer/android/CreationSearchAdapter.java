@@ -1,6 +1,5 @@
 package org.mediaplayer.android;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,76 +12,59 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlaylistCreationSearchAdapter
-        extends RecyclerView.Adapter<PlaylistCreationSearchAdapter.ViewHolder> {
-    private List<PlaylistCreationSearchItem> items;
-    private List<PlaylistCreationSearchItem> visible;
+public class CreationSearchAdapter
+        extends RecyclerView.Adapter<CreationSearchAdapter.ViewHolder> {
+    private List<CreationSearchItem> items;
+    private List<CreationSearchItem> visible;
 
     private OnItemClick listener;
 
     private String filter;
-    public PlaylistCreationSearchAdapter(List<PlaylistCreationSearchItem> items, OnItemClick listener) {
+    private boolean showHidden;
+    public CreationSearchAdapter(List<CreationSearchItem> items, OnItemClick listener, boolean showHidden) {
         this.items = items;
         this.visible = items;
 
         this.filter = "";
+        this.showHidden = showHidden;
 
         this.listener = listener;
     }
 
     public void filterBy(String filter) {
-        this.filter = filter;
-        if(filter.isEmpty()) {
-            visible = items;
-        }
-        else {
-            visible = new ArrayList<>();
-            filter = filter.toLowerCase();
-            for(PlaylistCreationSearchItem item : items) {
-                if(item.name.toLowerCase().contains(filter)) {
-                    visible.add(item);
-                }
-            }
-        }
-        notifyDataSetChanged();
+        this.filter = filter.toLowerCase();
+        filter();
     }
-    public void addItemSorted(PlaylistCreationSearchItem toAdd) {
-        boolean added = false;
-        for(int i = 0; i < items.size(); i++) {
-            if(toAdd.name.compareTo(items.get(i).name) <= 0) {
-                items.add(i, toAdd);
-                added = true;
-                break;
+    public void filter() {
+        visible = new ArrayList<>();
+        for(CreationSearchItem item : items) {
+            if((showHidden || item.visible) &&
+                    item.name.toLowerCase().contains(filter)) {
+                visible.add(item);
             }
         }
-        if(!added) items.add(toAdd);
-        filterBy(this.filter);
 
         notifyDataSetChanged();
     }
-    public void addItem(PlaylistCreationSearchItem item) {
+    public void addItem(CreationSearchItem item) {
         items.add(item);
         filterBy(this.filter);
-
-        notifyDataSetChanged();
     }
-    public void removeItem(PlaylistCreationSearchItem item) {
+    public void removeItem(CreationSearchItem item) {
         items.remove(item);
         filterBy(this.filter);
-
-        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
         View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.create_playlist_searchitem, viewGroup, false);
-        return new PlaylistCreationSearchAdapter.ViewHolder(view);
+                .inflate(R.layout.create_searchitem, viewGroup, false);
+        return new CreationSearchAdapter.ViewHolder(view);
     }
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int pos) {
-        PlaylistCreationSearchItem item = visible.get(pos);
+        CreationSearchItem item = visible.get(pos);
 
         holder.item_name.setText(item.name);
         holder.item_type.setText(item.type);
@@ -97,7 +79,7 @@ public class PlaylistCreationSearchAdapter
         return visible.size();
     }
 
-    public List<PlaylistCreationSearchItem> getItems() {
+    public List<CreationSearchItem> getItems() {
         return items;
     }
 
@@ -115,6 +97,6 @@ public class PlaylistCreationSearchAdapter
         }
     }
     public interface OnItemClick {
-        void onClick(PlaylistCreationSearchItem item);
+        void onClick(CreationSearchItem item);
     }
 }

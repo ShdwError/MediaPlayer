@@ -78,12 +78,8 @@ public abstract class GenericFileLogic {
 		GenericFileManager fm = fTree.createFile(path);
 		Playlist playlist = readPlaylist(fm, path, id);
 		for(String entryId: ids) {
-			TrackEntry tEntry = soundtracks.get(entryId);
-			if(tEntry != null) {
-				tEntry.inPlaylists.add(entryId);
-				DataPlaylistEntry entry = new DataPlaylistEntry(new DataString(entryId), new DataMap<DataString>(DataString::new));
-				playlist.add(entry);
-			}
+			DataPlaylistEntry dpe = createEntry(entryId);
+			if(dpe != null) playlist.add(dpe);
 		}
 		for(String subPlaylistId: subIds) {
 			playlist.addSubplaylist(subPlaylistId);
@@ -93,12 +89,16 @@ public abstract class GenericFileLogic {
 		plData.dataContainer.system.save();
 		return playlist;
 	}
-	public Session createSession(List<Playlist> sessionParts, Path path, boolean looping, boolean shuffle) throws IOException {
+	public Session createSession(List<Playlist> sessionParts, List<String> entries, Path path, boolean looping, boolean shuffle) throws IOException {
 		String id = UUID.randomUUID().toString();
 		sData.sessions.put(id, new DataString(path.toString()));
 		GenericFileManager fm = fTree.createFile(path);
 		Session session = readSession(fm, path, id);
-		
+
+		for(String entryId: entries) {
+			DataPlaylistEntry dpe = createEntry(entryId);
+			if(dpe != null) session.add(dpe);
+		}
 		for(Playlist playlist: sessionParts) {
 			session.add(playlist.getAll(playlists, true));
 		}
@@ -111,6 +111,14 @@ public abstract class GenericFileLogic {
 		sData.dataContainer.system.save();
 		
 		return session;
+	}
+	private DataPlaylistEntry createEntry(String entryId) {
+		TrackEntry entry = soundtracks.get(entryId);
+		if(entry != null) {
+			entry.inPlaylists.add(entryId);
+			return new DataPlaylistEntry(new DataString(entryId), new DataMap<DataString>(DataString::new));
+		}
+		return null;
 	}
 	//Load Functions
 	public void loadSoundtracks() throws IOException  {

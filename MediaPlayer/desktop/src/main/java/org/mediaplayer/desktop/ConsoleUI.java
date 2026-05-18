@@ -523,7 +523,7 @@ public class ConsoleUI {
 						name = name.replace("/", "-").replace("\\", "-");
 						Path sessionPath = Path.of("Sessions", name + ".txt");
 						if(!ownName) sessionPath = fileLogic.getFileTree().getNextFreeFileName(sessionPath);
-						Session session = fileLogic.createSession(sessionParts, sessionPath, looping, shuffle); 
+						Session session = fileLogic.createSession(sessionParts, new ArrayList<>(), sessionPath, looping, shuffle);
 						Platform.runLater(() -> {
 							audio.playSession(session);
 						});

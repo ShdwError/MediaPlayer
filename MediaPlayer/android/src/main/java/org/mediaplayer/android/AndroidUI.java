@@ -11,8 +11,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
-
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
@@ -20,11 +18,11 @@ import org.mediaplayer.core.TrackEntry;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class AndroidUI implements
         PlaylistCreationDialogFragment.OnPlaylistCreationClick,
+        SessionCreationDialogFragment.OnSessionCreationClick,
         SidebarAdapter.OnClick {
     private AndroidFileLogic fileLogic;
     private AndroidAudio audio;
@@ -211,19 +209,33 @@ public class AndroidUI implements
     }
 
     public void createNewPlaylistPopup() {
-        List<PlaylistCreationSearchItem> items = new ArrayList<>();
+        List<CreationSearchItem> items = new ArrayList<>();
         for(TrackEntry trackEntry: fileLogic.tracksSortedByName()) {
-            items.add(new PlaylistCreationSearchItem("s", trackEntry.getName(),
+            items.add(new CreationSearchItem("s", trackEntry.getName(),
                     audio.formatTime(trackEntry.length.get()), trackEntry.id));
         }
         for(Playlist playlist: fileLogic.playlistsSortedByName()) {
-            items.add(new PlaylistCreationSearchItem("p", playlist.getName(),
+            items.add(new CreationSearchItem("p", playlist.getName(),
                     "" + playlist.size(), playlist.id));
         }
 
-        PlaylistCreationDialogFragment dialog = new PlaylistCreationDialogFragment(app,
-                items, this);
+        PlaylistCreationDialogFragment dialog = new PlaylistCreationDialogFragment(items, this);
         dialog.show(app.getSupportFragmentManager(), "Create Playlist");
+    }
+
+    public void createNewSessionPopup() {
+        List<CreationSearchItem> items = new ArrayList<>();
+        for(Playlist playlist: fileLogic.playlistsSortedByName()) {
+            items.add(new CreationSearchItem("p", playlist.getName(),
+                    "" + playlist.size(), playlist.id));
+        }
+        for(TrackEntry trackEntry: fileLogic.tracksSortedByName()) {
+            items.add(new CreationSearchItem("s", trackEntry.getName(),
+                    audio.formatTime(trackEntry.length.get()), trackEntry.id));
+        }
+
+        SessionCreationDialogFragment dialog = new SessionCreationDialogFragment(items, this);
+        dialog.show(app.getSupportFragmentManager(), "Create Session");
     }
 
     public void onSoundtrackEnd(TrackEntry entry) {
@@ -262,15 +274,14 @@ public class AndroidUI implements
         }
     }
     @Override
-    public void onPlaylistCreationAttempt(String name, String path, List<PlaylistCreationSearchItem> items) {
-        Log.println(Log.ASSERT, "Test", name + ", " + path + "," + items);
+    public void onPlaylistCreationAttempt(String name, String path, List<CreationSearchItem> items) {
         path = path.replace("\\", "/");
 
         Path completePath = Path.of("Playlists", path, name + ".txt");
         List<String> entriesToAdd = new ArrayList<>();
         List<String> playlistsToAdd = new ArrayList<>();
 
-        for(PlaylistCreationSearchItem item: items) {
+        for(CreationSearchItem item: items) {
             if(item.type.equals("s")) {
                 entriesToAdd.add(item.id);
             }
@@ -283,6 +294,42 @@ public class AndroidUI implements
         }
         try {
             Playlist playlist = fileLogic.createPlaylist(completePath, entriesToAdd, playlistsToAdd);
+            int pos = playlists.addSorted(new SidebarItem(playlist.getName(), playlist.id, false));
+            sidebarAdapter.expand(playlists);
+
+            LinearLayoutManager lm = (LinearLayoutManager) sidebar.getLayoutManager();
+            lm.scrollToPositionWithOffset(pos, 500);
+
+            showPlaylist(playlist.id);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void onSessionCreationAttempt(String name, String path, List<CreationSearchItem> items) {
+        path = path.replace("\\", "/");
+
+        Path completePath = Path.of("Sessions", path, name + ".txt");
+        List<String> entries = new ArrayList<>();
+        List<Playlist> sessionParts = new ArrayList<>();
+
+        for(CreationSearchItem item: items) {
+            if(item.type.equals("s")) {
+                entries.add(item.id);
+            }
+            else if(item.type.equals("p")) {
+                Playlist playlist = fileLogic.playlists.get(item.id);
+                if(playlist != null)
+                    sessionParts.add(playlist);
+            }
+            else {
+                Log.println(Log.ASSERT, "Test", "Wrong type?");
+            }
+        }
+        try {
+            Session session = fileLogic.createSession(sessionParts, entries, completePath, playlistsToAdd);
             int pos = playlists.addSorted(new SidebarItem(playlist.getName(), playlist.id, false));
             sidebarAdapter.expand(playlists);
 
