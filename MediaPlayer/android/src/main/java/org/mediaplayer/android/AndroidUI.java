@@ -189,6 +189,12 @@ public class AndroidUI implements
         play.setOnClickListener(v -> {
             audio.playSession(session);
         });
+        delete.setOnClickListener(v -> {
+            fileLogic.deleteSession(session);
+            playlistAdapter = null;
+            frame.removeAllViews();
+            sidebarAdapter.delete(sessions, id);
+        });
 
         //Entries
         this.sessionRecycler = view.findViewById(R.id.session_tracks);
@@ -251,14 +257,13 @@ public class AndroidUI implements
         }
     }
 
-    public void moveToPlaylistPos(int pos) {
-
-    }
-
     @Override
     public void onSidebarClick(SidebarItem item) {
         if(item.id.equals("add_playlist")) {
             createNewPlaylistPopup();
+        }
+        else if(item.id.equals("add_session")) {
+            createNewSessionPopup();
         }
         else if(item.id.equals("soundtracks")) {
             currentSidebarItem = item;
@@ -308,7 +313,9 @@ public class AndroidUI implements
     }
 
     @Override
-    public void onSessionCreationAttempt(String name, String path, List<CreationSearchItem> items) {
+    public void onSessionCreationAttempt(String name, String path,
+                                         boolean loop, boolean shuffle,
+                                         List<CreationSearchItem> items) {
         path = path.replace("\\", "/");
 
         Path completePath = Path.of("Sessions", path, name + ".txt");
@@ -329,14 +336,14 @@ public class AndroidUI implements
             }
         }
         try {
-            Session session = fileLogic.createSession(sessionParts, entries, completePath, playlistsToAdd);
-            int pos = playlists.addSorted(new SidebarItem(playlist.getName(), playlist.id, false));
-            sidebarAdapter.expand(playlists);
+            Session session = fileLogic.createSession(sessionParts, entries, completePath, shuffle, loop);
+            int pos = sessions.addSorted(new SidebarItem(session.getName(), session.id, false));
+            sidebarAdapter.expand(sessions);
 
             LinearLayoutManager lm = (LinearLayoutManager) sidebar.getLayoutManager();
             lm.scrollToPositionWithOffset(pos, 500);
 
-            showPlaylist(playlist.id);
+            showSession(session.id);
         }
         catch (IOException e) {
             throw new RuntimeException(e);

@@ -11,4 +11,5 @@
     <string name="back">Back</string>
     <string name="name">Name</string>
     <string name="path">Path</string>
+    <string name="menu">⋮</string>
 </resources>
