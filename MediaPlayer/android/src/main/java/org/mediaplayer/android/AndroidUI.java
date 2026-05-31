@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -148,6 +149,9 @@ public class AndroidUI implements
         playlistAdapter = new PlaylistAdapter(playlist, fileLogic, audio, (entry, pos) ->  {
             audio.playSingleSoundtrack(entry);
         });
+        ItemTouchHelper.Callback callback = new PlaylistMoveCallback(playlistAdapter);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(entries);
 
         entries.setAdapter(playlistAdapter);
 
@@ -156,6 +160,9 @@ public class AndroidUI implements
         subplaylists.setLayoutManager(new LinearLayoutManager(app.getApplicationContext()));
 
         subplaylistsAdapter = new SubplaylistsAdapter(playlist, fileLogic, this, audio);
+        callback = new PlaylistMoveCallback(playlistAdapter);
+        touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(subplaylists);
 
         subplaylists.setAdapter(subplaylistsAdapter);
 
@@ -206,6 +213,9 @@ public class AndroidUI implements
             audio.moveToSessionPos(pos);
             playlistAdapter.notifyItemChanged(pos);
         });
+        ItemTouchHelper.Callback callback = new PlaylistMoveCallback(playlistAdapter);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(sessionRecycler);
 
         sessionRecycler.setAdapter(playlistAdapter);
 

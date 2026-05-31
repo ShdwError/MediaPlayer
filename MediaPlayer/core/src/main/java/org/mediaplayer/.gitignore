@@ -1,7 +1,1 @@
-/App.class
-/AppUI.class
-/Playlist.class
-/Session.class
-/Start.class
-/TrackEntry.class
-/Test.java
+*.class

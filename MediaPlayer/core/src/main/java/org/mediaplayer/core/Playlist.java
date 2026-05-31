@@ -66,9 +66,10 @@ public class Playlist extends DataAdapter {
 		playlist.remove(dpe);
 		uniqueEntrySet.remove(dpe.id.get());
 	}
-	public void remove(int i) {
-		playlist.remove(i);
-		uniqueEntrySet.remove(getId(i));
+	public DataPlaylistEntry remove(int i) {
+		DataPlaylistEntry dpe = playlist.remove(i);
+		uniqueEntrySet.remove(dpe.id.get());
+		return dpe;
 	}
 	public void set(int i, DataPlaylistEntry entry) {
 		playlist.set(i, entry);

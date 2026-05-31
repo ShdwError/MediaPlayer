@@ -14,7 +14,8 @@ import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.TrackEntry;
 
-public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> {
+public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder>
+        implements PlaylistMoveCallback.OnItemTouchCallback {
     private Playlist playlist;
     private AndroidFileLogic fileLogic;
     private AndroidAudio audio;
@@ -93,6 +94,23 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                 entry.id.equals(playlist.get(currentlyRunning).id.get())) {
             notifyItemChanged(currentlyRunning);
         }
+    }
+
+    @Override
+    public void onMove(RecyclerView.ViewHolder itemHolder, RecyclerView.ViewHolder targetHolder) {
+        ViewHolder item = (ViewHolder) itemHolder;
+        ViewHolder target = (ViewHolder) targetHolder;
+
+
+        int from = item.getBindingAdapterPosition();
+        int to = target.getBindingAdapterPosition();
+
+        item.number.setText("" + to);
+        target.number.setText("" + from);
+        DataPlaylistEntry dpe = playlist.remove(from);
+
+        playlist.addAt(to, dpe);
+        notifyItemMoved(from, to);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
