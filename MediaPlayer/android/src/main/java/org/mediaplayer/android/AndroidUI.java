@@ -12,6 +12,15 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.mediaplayer.android.ui.CreationSearchItem;
+import org.mediaplayer.android.ui.PlaylistAdapter;
+import org.mediaplayer.android.ui.PlaylistCreationDialogFragment;
+import org.mediaplayer.android.ui.PlaylistMoveCallback;
+import org.mediaplayer.android.ui.SessionCreationDialogFragment;
+import org.mediaplayer.android.ui.SidebarAdapter;
+import org.mediaplayer.android.ui.SidebarItem;
+import org.mediaplayer.android.ui.SoundtracksAdapter;
+import org.mediaplayer.android.ui.SubplaylistsAdapter;
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
@@ -132,7 +141,7 @@ public class AndroidUI implements
         length.setText("Playlength: " + audio.formatTime(fileLogic.playlistLength(playlist)));
 
         play.setOnClickListener(v -> {
-
+            createNewSessionPopup(playlist.getName(), "", List.of(playlist), List.of());
         });
         delete.setOnClickListener(v -> {
             fileLogic.deletePlaylist(playlist);
@@ -226,14 +235,8 @@ public class AndroidUI implements
 
     public void createNewPlaylistPopup() {
         List<CreationSearchItem> items = new ArrayList<>();
-        for(TrackEntry trackEntry: fileLogic.tracksSortedByName()) {
-            items.add(new CreationSearchItem("s", trackEntry.getName(),
-                    audio.formatTime(trackEntry.length.get()), trackEntry.id));
-        }
-        for(Playlist playlist: fileLogic.playlistsSortedByName()) {
-            items.add(new CreationSearchItem("p", playlist.getName(),
-                    "" + playlist.size(), playlist.id));
-        }
+        addEntriesToCreationItems(items, fileLogic.tracksSortedByName());
+        addPlaylistsToCreationItems(items, fileLogic.playlistsSortedByName());
 
         PlaylistCreationDialogFragment dialog = new PlaylistCreationDialogFragment(items, this);
         dialog.show(app.getSupportFragmentManager(), "Create Playlist");
@@ -241,17 +244,35 @@ public class AndroidUI implements
 
     public void createNewSessionPopup() {
         List<CreationSearchItem> items = new ArrayList<>();
-        for(Playlist playlist: fileLogic.playlistsSortedByName()) {
-            items.add(new CreationSearchItem("p", playlist.getName(),
-                    "" + playlist.size(), playlist.id));
-        }
-        for(TrackEntry trackEntry: fileLogic.tracksSortedByName()) {
-            items.add(new CreationSearchItem("s", trackEntry.getName(),
-                    audio.formatTime(trackEntry.length.get()), trackEntry.id));
-        }
+        addPlaylistsToCreationItems(items, fileLogic.playlistsSortedByName());
+        addEntriesToCreationItems(items, fileLogic.tracksSortedByName());
 
         SessionCreationDialogFragment dialog = new SessionCreationDialogFragment(items, this);
         dialog.show(app.getSupportFragmentManager(), "Create Session");
+    }
+    public void createNewSessionPopup(String name, String path, List<Playlist> defaultPlaylists, List<TrackEntry> defaultEntries) {
+        List<CreationSearchItem> items = new ArrayList<>();
+        addPlaylistsToCreationItems(items, fileLogic.playlistsSortedByName());
+        addEntriesToCreationItems(items, fileLogic.tracksSortedByName());
+
+        List<CreationSearchItem> defaultItems = new ArrayList<>();
+        addPlaylistsToCreationItems(defaultItems, defaultPlaylists);
+        addEntriesToCreationItems(defaultItems, defaultEntries);
+
+        SessionCreationDialogFragment dialog = new SessionCreationDialogFragment(items, this, name, path, defaultItems);
+        dialog.show(app.getSupportFragmentManager(), "Create Session");
+    }
+    private void addPlaylistsToCreationItems(List<CreationSearchItem> items, List<Playlist> playlists) {
+        for(Playlist playlist: playlists) {
+            items.add(new CreationSearchItem("p", playlist.getName(),
+                    "" + fileLogic.playlistSize(playlist), playlist.id));
+        }
+    }
+    private void addEntriesToCreationItems(List<CreationSearchItem> items, List<TrackEntry> trackEntries) {
+        for(TrackEntry trackEntry: trackEntries) {
+            items.add(new CreationSearchItem("s", trackEntry.getName(),
+                    audio.formatTime(trackEntry.length.get()), trackEntry.id));
+        }
     }
 
     public void onSoundtrackEnd(TrackEntry entry) {

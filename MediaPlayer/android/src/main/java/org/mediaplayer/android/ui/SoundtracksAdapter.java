@@ -1,4 +1,4 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,10 +8,10 @@ import android.widget.TextView;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.mediaplayer.android.R;
 import org.mediaplayer.core.TrackEntry;
 
 import java.util.List;
-import java.util.Map;
 
 public class SoundtracksAdapter extends RecyclerView.Adapter<SoundtracksAdapter.ViewHolder> {
     private List<TrackEntry> list;

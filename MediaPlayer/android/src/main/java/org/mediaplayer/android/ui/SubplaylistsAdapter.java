@@ -1,14 +1,16 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.mediaplayer.android.AndroidAudio;
+import org.mediaplayer.android.AndroidFileLogic;
+import org.mediaplayer.android.AndroidUI;
+import org.mediaplayer.android.R;
 import org.mediaplayer.core.Playlist;
 
 public class SubplaylistsAdapter extends RecyclerView.Adapter<SubplaylistsAdapter.ViewHolder> {

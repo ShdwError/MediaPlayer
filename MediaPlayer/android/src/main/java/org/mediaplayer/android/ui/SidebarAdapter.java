@@ -1,12 +1,10 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
-
-import org.mediaplayer.core.Playlist;
 
 import java.util.ArrayList;
 import java.util.List;

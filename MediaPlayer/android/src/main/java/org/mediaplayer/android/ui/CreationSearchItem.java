@@ -1,8 +1,11 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 public class CreationSearchItem {
-    String type, name, length, id;
-    boolean visible;
+    public String type;
+    public String name;
+    public String length;
+    public String id;
+    public boolean visible;
 
     public CreationSearchItem(String type, String name, String length, String id) {
         this.type = type;

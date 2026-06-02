@@ -1,4 +1,4 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
@@ -10,9 +10,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.mediaplayer.android.AndroidAudio;
+import org.mediaplayer.android.AndroidFileLogic;
+import org.mediaplayer.android.R;
 import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.TrackEntry;
+
+import java.io.IOException;
 
 public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder>
         implements PlaylistMoveCallback.OnItemTouchCallback {
@@ -111,6 +116,12 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
         playlist.addAt(to, dpe);
         notifyItemMoved(from, to);
+
+        try {
+            playlist.dataContainer.system.save();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

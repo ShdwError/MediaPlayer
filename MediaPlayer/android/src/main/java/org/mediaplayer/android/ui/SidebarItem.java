@@ -1,4 +1,4 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 import java.util.ArrayList;
 import java.util.List;

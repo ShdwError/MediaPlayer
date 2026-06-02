@@ -1,4 +1,4 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import org.mediaplayer.android.R;
 
 import java.util.ArrayList;
 import java.util.List;

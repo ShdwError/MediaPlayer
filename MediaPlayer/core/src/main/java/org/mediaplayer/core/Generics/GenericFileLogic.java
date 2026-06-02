@@ -419,4 +419,7 @@ public abstract class GenericFileLogic {
 		}
 		return ret;
 	}
+	public int playlistSize(Playlist playlist) {
+		return playlist.getAll(playlists, false).size();
+	}
 }

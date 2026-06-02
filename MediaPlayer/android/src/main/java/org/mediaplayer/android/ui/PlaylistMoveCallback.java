@@ -1,4 +1,4 @@
-package org.mediaplayer.android;
+package org.mediaplayer.android.ui;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
