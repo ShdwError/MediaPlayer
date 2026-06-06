@@ -159,8 +159,8 @@ public class Playlist extends DataAdapter {
 	    List<DataPlaylistEntry> ordered = new ArrayList<>(); 
 	    
 	    for(DataPlaylistEntry dpe : get()) {
-	    	if(forcedTargets.contains(dpe.id.get())) continue;
-	        if(visited.contains(dpe.id.get())) continue;
+	    	if(forcedTargets.contains(dpe.id.get()) || visited.contains(dpe.id.get()))
+				continue;
 
 	        DataPlaylistEntry current = dpe;
 	        while (current != null && !visited.contains(current.id.get())) {

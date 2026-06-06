@@ -35,6 +35,11 @@ public class SubplaylistsAdapter extends RecyclerView.Adapter<SubplaylistsAdapte
     @Override
     public void onBindViewHolder(ViewHolder holder, int pos) {
         Playlist subplaylist = fileLogic.playlists.get(playlist.getSubPlaylists().get(pos).get());
+        if(subplaylist == null) {
+            //TODO Error
+            return;
+        }
+
         holder.title.setText(subplaylist.getName());
         holder.size.setText("Size: " + subplaylist.getAll(fileLogic.playlists, false).size());
         holder.length.setText("Playlength: " + audio.formatTime(fileLogic.playlistLength(subplaylist)));
