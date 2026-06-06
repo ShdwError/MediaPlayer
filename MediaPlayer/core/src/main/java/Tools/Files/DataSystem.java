@@ -13,11 +13,11 @@ import Tools.Files.Data.DataType;
 import Tools.Files.Data.DataTypes.DataString;
 
 public class DataSystem {
-	private FileManager fileManager;
+	private GenericFileManager fileManager;
 	public Map<String, DataContainer> dataContainers;
 	public Supplier<DataAdapter> adapter;
 	public Map<String, DataType> containerData;
-	public DataSystem(FileManager fileManager) {
+	public DataSystem(GenericFileManager fileManager) {
 		this.fileManager = fileManager;
 		dataContainers = new HashMap<>();
 		containerData = new HashMap<>();
@@ -83,10 +83,10 @@ public class DataSystem {
 		dataContainers.put(id, container);
 		return container;
 	}
-	public void changeFileManager(FileManager fileManager) {
+	public void changeFileManager(GenericFileManager fileManager) {
 		this.fileManager = fileManager;
 	}
-	public FileManager getFileManager() {
+	public GenericFileManager getFileManager() {
 		return fileManager;
 	}
 

@@ -10,29 +10,27 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.mediaplayer.core.App;
+import org.mediaplayer.core.Generics.GenericFileLogic;
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
 import org.mediaplayer.core.UtilFunctions;
 import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
-import org.mediaplayer.core.Generics.GenericUI;
 
 import Tools.Files.Util;
 import Tools.Files.Data.DataTypes.DataString;
 import javafx.application.Platform;
 
-public class ConsoleUI extends GenericUI {
-	private DesktopFileLogic fileLogic;
+public class ConsoleUI {
+	private GenericFileLogic fileLogic;
 	private DesktopAudio audio;
 	
 	public ConsoleUI() {
 		
 	}
-	@Override
-	public void create(App app) {
-		this.audio = (DesktopAudio) app.audio;
-		this.fileLogic = (DesktopFileLogic) app.fileLogic;
+	public void create(DesktopAudio audio, GenericFileLogic fileLogic) {
+		this.audio = audio;
+		this.fileLogic = fileLogic;
 	}
 	public void startUI() {
 		//Thread because of Scanner
@@ -529,7 +527,7 @@ public class ConsoleUI extends GenericUI {
 						name = name.replace("/", "-").replace("\\", "-");
 						Path sessionPath = Path.of("Sessions", name + ".txt");
 						if(!ownName) sessionPath = fileLogic.getFileTree().getNextFreeFileName(sessionPath);
-						Session session = fileLogic.createSession(sessionParts, sessionPath, looping, shuffle); 
+						Session session = fileLogic.createSession(sessionParts, new ArrayList<>(), sessionPath, looping, shuffle);
 						Platform.runLater(() -> {
 							audio.playSession(session);
 						});
@@ -608,8 +606,8 @@ public class ConsoleUI extends GenericUI {
 							String id2 = sc.next();
 							if(id2.equals("to")) id2 = sc.next();
 							boolean inRange = false;
-							for(Map.Entry<String, TrackEntry> e: tracksSortedByName()) {
-								String id = e.getKey();
+							for(TrackEntry entry: fileLogic.tracksSortedByName()) {
+								String id = entry.id;
 								if(id.equals(id1)) {
 									System.out.print(id);
 									inRange = true;
@@ -626,10 +624,10 @@ public class ConsoleUI extends GenericUI {
 							
 							List<TrackEntry> entries = new ArrayList<>();
 							
-							for(Map.Entry<String, TrackEntry> e: tracksSortedByName()) {
-								if(e.getValue().path.toString().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) {
-									entries.add(e.getValue());
-									System.out.println(e.getValue().getName());
+							for(TrackEntry entry: fileLogic.tracksSortedByName()) {
+								if(entry.path.toString().toLowerCase().contains(s.toLowerCase().replace("/", "\\"))) {
+									entries.add(entry);
+									System.out.println(entry);
 								}
 							}
 							System.out.println("Add These?");
@@ -731,9 +729,8 @@ public class ConsoleUI extends GenericUI {
 	public void printSoundtracks(boolean showIDs) {
 		System.out.println("Soundtracks: ");
 		System.out.println();
-		for(Map.Entry<String, TrackEntry> e: tracksSortedByName()) {
-			String id = e.getKey();
-			TrackEntry track = e.getValue();
+		for(TrackEntry track: fileLogic.tracksSortedByName()) {
+			String id = track.id;
 			
 			System.out.println("Name: " + track.getName());
 			if(showIDs) {
@@ -747,9 +744,8 @@ public class ConsoleUI extends GenericUI {
 	public void printPlaylists(boolean showIDs) {
 		System.out.println("Playlists: ");
 		System.out.println();
-		for(Map.Entry<String, Playlist> e: playlistsSortedByName()) {
-			String id = e.getKey();
-			Playlist playlist = e.getValue();
+		for(Playlist playlist: fileLogic.playlistsSortedByName()) {
+			String id = playlist.id;
 			System.out.println("Name: " + playlist.getName());
 			if(showIDs)
 				System.out.println("ID: " + id);
@@ -896,16 +892,6 @@ public class ConsoleUI extends GenericUI {
 			s = sc.next();
 		} while(!(s.equals(till) || stop));
 		return ret;
-	}
-	public List<Map.Entry<String, TrackEntry>> tracksSortedByName() {
-		return fileLogic.soundtracks.entrySet().stream()
-	            .sorted(Comparator.comparing(e -> e.getValue().getName().toLowerCase()))
-	            .toList();
-	}
-	public List<Map.Entry<String, Playlist>> playlistsSortedByName() {
-		return fileLogic.playlists.entrySet().stream()
-	            .sorted(Comparator.comparing(e -> e.getValue().getName().toLowerCase()))
-	            .toList();
 	}
 
 }

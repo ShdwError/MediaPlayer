@@ -2,3 +2,4 @@
 /MediaPlayer/*
 /.gradle/
 /build/
+*.class

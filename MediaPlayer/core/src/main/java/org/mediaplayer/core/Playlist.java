@@ -66,9 +66,10 @@ public class Playlist extends DataAdapter {
 		playlist.remove(dpe);
 		uniqueEntrySet.remove(dpe.id.get());
 	}
-	public void remove(int i) {
-		playlist.remove(i);
-		uniqueEntrySet.remove(getId(i));
+	public DataPlaylistEntry remove(int i) {
+		DataPlaylistEntry dpe = playlist.remove(i);
+		uniqueEntrySet.remove(dpe.id.get());
+		return dpe;
 	}
 	public void set(int i, DataPlaylistEntry entry) {
 		playlist.set(i, entry);
@@ -145,10 +146,10 @@ public class Playlist extends DataAdapter {
 		boolean hasForced = false;
 	    Set<String> forcedTargets = new HashSet<>();
 	    
-	    for (DataPlaylistEntry e : get()) {
+	    for(DataPlaylistEntry e : get()) {
 	        entryMap.put(e.id.get(), e);
 	        if(e.getForcedNext() != null) {
-	        	hasForced = true;
+				hasForced = true;
 	            forcedTargets.add(e.getForcedNext());
 	        }
 	    }
@@ -158,8 +159,8 @@ public class Playlist extends DataAdapter {
 	    List<DataPlaylistEntry> ordered = new ArrayList<>(); 
 	    
 	    for(DataPlaylistEntry dpe : get()) {
-	    	if(forcedTargets.contains(dpe.id.get())) continue;
-	        if(visited.contains(dpe.id.get())) continue;
+	    	if(forcedTargets.contains(dpe.id.get()) || visited.contains(dpe.id.get()))
+				continue;
 
 	        DataPlaylistEntry current = dpe;
 	        while (current != null && !visited.contains(current.id.get())) {
