@@ -57,7 +57,7 @@ public class ConsoleUI extends GenericUI {
 				if(s.equals("menu")) {
 					printMenu();
 				}
-				else if(s.equals("current") || s.equals("c")) {
+				else if(s.equals("current") || s.equals("cur")) {
 					printCurrent();
 				}
 				else if(s.equals("in")) {
@@ -97,10 +97,10 @@ public class ConsoleUI extends GenericUI {
 				else if(s.equals("plist")) {
 					printPlaylists(false);
 				}
-				else if(s.equals("pause")) {
+				else if(s.equals("pause") || s.equals("p")) {
 					audio.pause();
 				}
-				else if(s.equals("cont")) {
+				else if(s.equals("cont") || s.equals("c")) {
 					audio.play();
 				}
 				else if(s.equals("vol")) {
@@ -110,10 +110,13 @@ public class ConsoleUI extends GenericUI {
 						audio.setVolume(vol/100.0);
 					}
 				}
+				else if(s.equals("getvol")) {
+					//System.out.println("Volume: " + audio.);
+				}
 				else if(s.equals("stop")) {
 					audio.stopSession();
 				}
-				else if(s.equals("rename"))  {
+				else if(s.equals("rename") || s.equals("rn"))  {
 					s = sc.next();
 					if(s.equals("current") || s.equals("c")) {
 						String type = sc.next();
@@ -176,7 +179,7 @@ public class ConsoleUI extends GenericUI {
 				}
 				else if(s.equals("delete")) {
 					s = sc.next();
-					if(s.equals("session")) {
+					if(s.equals("session") || s.equals("ses")) {
 						printSessions();
 						s = sc.next();
 						Session session = fileLogic.sessions.get(s);
@@ -208,7 +211,7 @@ public class ConsoleUI extends GenericUI {
 					}
 					else if(s.equals("current") || s.equals("c")) {
 						s = sc.next();
-						if(s.equals("session")) {
+						if(s.equals("session") || s.equals("ses")) {
 							if(audio.getCurrentSession() != null) {
 								Platform.runLater(() -> {
 									fileLogic.deleteSession(audio.getCurrentSession());
@@ -331,8 +334,8 @@ public class ConsoleUI extends GenericUI {
 									Integer pos1 = UtilFunctions.getInt(pos1s);
 									Integer pos2 = UtilFunctions.getInt(pos2s)+1;
 									if(pos1 < 0) pos1 = 0;
-									if(pos1 > playlist.size()) {
-										System.out.println("First Position cannot be greater than Size of " + playlist.getName());
+									if(pos1 >= playlist.size()) {
+										System.out.println("First Position cannot be greater than size of " + playlist.getName());
 										continue;
 									}
 									if(pos2 > playlist.size()) pos2 = playlist.size();
@@ -499,7 +502,8 @@ public class ConsoleUI extends GenericUI {
 						else {
 							Playlist playlist = null;
 							if(s.equals("-s")) {
-								s = sc.nextLine();
+								s = sc.nextLine().strip();
+								while(s.equals("")) s = sc.nextLine().strip();
 								playlist = findPlaylist(s, sc);
 							}
 							else {
