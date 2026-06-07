@@ -28,6 +28,10 @@ public class TrackEntry extends DataAdapter {
 	public String getName() {
 		return Util.getNameAndType(Path.of("Soundtracks").relativize(path).toString())[0];
 	}
+	@Override
+	public String toString() {
+		return getName();
+	}
 	
 	
 	@Override

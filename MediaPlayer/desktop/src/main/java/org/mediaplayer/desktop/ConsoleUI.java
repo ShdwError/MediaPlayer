@@ -3,6 +3,7 @@ package org.mediaplayer.desktop;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.mediaplayer.core.UtilFunctions;
 import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 
 import Tools.Files.Util;
+import Tools.Files.Data.DataTypes.DataMap;
 import Tools.Files.Data.DataTypes.DataString;
 import javafx.application.Platform;
 
@@ -43,7 +45,7 @@ public class ConsoleUI {
 				if(session != null)  {
 					System.out.println("Continue in " + session.getName() + "?");
 					s = sc.next();
-					if(s.equals("yes"))
+					if(s.equals("yes") || s.equals("y"))
 						Platform.runLater(() -> {
 							audio.playSession(session);
 						});
@@ -70,7 +72,7 @@ public class ConsoleUI {
 				}
 				else if(s.equals("list")) {
 					s = sc.next();
-					if(s.equals("current") || s.equals("c"))
+					if(s.equals("current") || s.equals("cur") || s.equals("c"))
 						printPlaylist(audio.getCurrentSession());
 					else {
 						Playlist playlist = findPlaylist(s, sc);
@@ -109,14 +111,14 @@ public class ConsoleUI {
 					}
 				}
 				else if(s.equals("getvol")) {
-					//System.out.println("Volume: " + audio.);
+					System.out.println("volume: " + (int) (audio.getVolume()*100));
 				}
 				else if(s.equals("stop")) {
 					audio.stopSession();
 				}
 				else if(s.equals("rename") || s.equals("rn"))  {
 					s = sc.next();
-					if(s.equals("current") || s.equals("c")) {
+					if(s.equals("current") || s.equals("cur") || s.equals("c")) {
 						String type = sc.next();
 						s = sc.nextLine().strip();
 						while(s.equals("")) s = sc.nextLine().strip();
@@ -175,9 +177,23 @@ public class ConsoleUI {
 						}
 					}
 				}
-				else if(s.equals("delete")) {
+				else if(s.equals("delete") || s.equals("del")) {
 					s = sc.next();
-					if(s.equals("session") || s.equals("ses")) {
+					if(s.equals("all"))  {
+						s = sc.next();
+						if(s.equals("sessions")) {
+							System.out.println("Are you sure?");
+							s = sc.next();
+							if(s.equals("yes")) {
+								Collection<Session> values = fileLogic.sessions.values();
+								Session[] toDelete = values.toArray(new Session[values.size()]);
+								for(Session session: toDelete) {
+									fileLogic.deleteSession(session);
+								}
+							}
+						}
+					}
+					else if(s.equals("session") || s.equals("ses")) {
 						printSessions();
 						s = sc.next();
 						Session session = fileLogic.sessions.get(s);
@@ -207,7 +223,7 @@ public class ConsoleUI {
 						}
 						else System.out.println("Cannot find Soundtrack");
 					}
-					else if(s.equals("current") || s.equals("c")) {
+					else if(s.equals("current") || s.equals("c") || s.equals("cur")) {
 						s = sc.next();
 						if(s.equals("session") || s.equals("ses")) {
 							if(audio.getCurrentSession() != null) {
@@ -229,14 +245,17 @@ public class ConsoleUI {
 						System.out.println("Unknown command");
 					}
 				}
-				else if(s.equals("addto")) {
+				else if(s.equals("addto") || s.equals("a2")) {
 					s = sc.nextLine().strip();
 					while(s.equals("")) s = sc.nextLine().strip();
 					Playlist playlist = findPlaylist(s, sc);
 					if(playlist != null) {
 						System.out.println(audio.getCurrentTrack().getName() + " added to " + playlist.getName());
 						audio.getCurrentTrack().inPlaylists.add(playlist.id);
-						playlist.add(audio.getCurrentSession().getCurrent().copy());
+						if(audio.getCurrentSession() != null)
+							playlist.add(audio.getCurrentSession().getCurrent().copy());
+						else
+							playlist.add(new DataPlaylistEntry(new DataString(audio.getCurrentTrack().id), new DataMap<DataString>(DataString::new)));
 					}
 				}
 				else if(s.equals("removefrom") || s.equals("rmvfrom")) {
@@ -420,7 +439,7 @@ public class ConsoleUI {
 								String pos = sc.next();
 								Integer i = UtilFunctions.getInt(pos);
 								if(i == null) System.out.println(pos + " is not a Number");
-								else if(i < playlist.size() && i >= 0) {
+								else if(i < playlist.getSubPlaylists().size() && i >= 0) {
 									playlist.removeSubplaylist(i);
 								}
 								else {
@@ -470,6 +489,7 @@ public class ConsoleUI {
 														DataPlaylistEntry dpe = playlist.get(pos);
 														playlist.remove(pos);
 														playlist.addAt(pos2, dpe);
+														playlist.reorganize();
 													}
 												}
 											}
@@ -551,7 +571,7 @@ public class ConsoleUI {
 						printPlaylistPreview();
 					}
 				}
-				else if(s.equals("next")) {
+				else if(s.equals("next") || s.equals("n")) {
 					if(audio.getCurrentSession() == null) {
 						continue;
 					}
@@ -580,7 +600,7 @@ public class ConsoleUI {
 					Set<String> uniqueSubLists = new HashSet<>();
 					do {
 						System.out.println();
-						System.out.println("Creating Soundtrack");
+						System.out.println("Creating Playlist");
 						System.out.println("- add *id* [...];");
 						System.out.println("- addpl *id* [...];");
 						System.out.println("- get *id* [to] *id");
@@ -700,6 +720,7 @@ public class ConsoleUI {
 		System.out.println("- pause");
 		System.out.println("- cont");
 		System.out.println("- vol *%*");
+		System.out.println("- getvol");
 		System.out.println("- stop");
 		System.out.println("- play [*id*] [-s *name*] [loop] [shuffle] [as *name*] [...] run");
 		System.out.println("- resume");
@@ -714,6 +735,7 @@ public class ConsoleUI {
 		System.out.println("- rename session/playlist/soundtrack *id* *name*");
 		System.out.println("- delete session/playlist/soundtrack *id*");
 		System.out.println("- delete current session/soundtrack");
+		System.out.println("- delete all sessions");
 		System.out.println("- modify playlist *name*");
 		System.out.println("- save");
 		System.out.println("- quit");

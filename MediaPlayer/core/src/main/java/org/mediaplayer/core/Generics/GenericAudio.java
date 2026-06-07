@@ -113,6 +113,7 @@ public abstract class GenericAudio {
 	public abstract void closePlayer();
 	
 	public abstract void setVolume(double v);
+	public abstract double getVolume();
 	public abstract void play();
 	public abstract void pause();
 

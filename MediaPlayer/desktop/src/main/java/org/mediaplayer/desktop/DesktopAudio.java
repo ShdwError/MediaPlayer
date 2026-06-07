@@ -91,6 +91,10 @@ public class DesktopAudio extends GenericAudio {
 			mediaPlayer.setVolume(v);
 	}
 	@Override
+	public double getVolume() {
+		return volume;
+	}
+	@Override
 	public void play() {
 		if(mediaPlayer != null)
 			mediaPlayer.play();

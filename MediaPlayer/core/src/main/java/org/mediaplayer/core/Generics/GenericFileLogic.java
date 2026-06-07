@@ -78,7 +78,7 @@ public abstract class GenericFileLogic {
 		GenericFileManager fm = fTree.createFile(path);
 		Playlist playlist = readPlaylist(fm, path, id);
 		for(String entryId: ids) {
-			DataPlaylistEntry dpe = createEntry(entryId);
+			DataPlaylistEntry dpe = createEntry(playlist, entryId);
 			if(dpe != null) playlist.add(dpe);
 		}
 		for(String subPlaylistId: subIds) {
@@ -96,7 +96,7 @@ public abstract class GenericFileLogic {
 		Session session = readSession(fm, path, id);
 
 		for(String entryId: entries) {
-			DataPlaylistEntry dpe = createEntry(entryId);
+			DataPlaylistEntry dpe = createEntry(session, entryId);
 			if(dpe != null) session.add(dpe);
 		}
 		for(Playlist playlist: sessionParts) {
@@ -112,10 +112,10 @@ public abstract class GenericFileLogic {
 		
 		return session;
 	}
-	private DataPlaylistEntry createEntry(String entryId) {
+	private DataPlaylistEntry createEntry(Playlist playlist, String entryId) {
 		TrackEntry entry = soundtracks.get(entryId);
 		if(entry != null) {
-			entry.inPlaylists.add(entryId);
+			entry.inPlaylists.add(playlist.id);
 			return new DataPlaylistEntry(new DataString(entryId), new DataMap<DataString>(DataString::new));
 		}
 		return null;
@@ -305,7 +305,11 @@ public abstract class GenericFileLogic {
 	public void deleteSoundtrack(TrackEntry entry) {
 		try {
 			for(String id: entry.inPlaylists) {
-				playlists.get(id).remove(new DataPlaylistEntry(new DataString(entry.id), null));
+				Playlist playlist = playlists.get(id);
+				if(playlist != null)
+					playlist.remove(new DataPlaylistEntry(new DataString(entry.id), null));
+				else
+					System.out.println("Playlist " + id + " does not exist");
 			}
 			if(entry.id.equals(audio.getCurrentTrack().id) && audio.hasPlayer()) {
 				audio.playNextTrack();
@@ -363,9 +367,11 @@ public abstract class GenericFileLogic {
 				if(!soundtracks.containsValue(entry)) {
 					readEntry(entry, fTree.getOrCreate(Path.of(split[0] + "_info.txt")));
 					soundtracks.put(id, entry);
+					stData.soundtracks.put(id, new DataString(entry.path.toString()));
 				}
 			}
 		}
+		stDataSystem.save();
 	}
 	public void save() throws IOException {
 		soundtracks.forEach((id,entry) -> {
