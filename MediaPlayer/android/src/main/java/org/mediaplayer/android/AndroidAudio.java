@@ -103,6 +103,12 @@ public class AndroidAudio extends GenericAudio {
         if(mediaPlayer != null)
             mediaPlayer.setVolume(this.volume, this.volume);
     }
+
+    @Override
+    public double getVolume() {
+        return this.volume;
+    }
+
     @Override
     public void play() {
         if(mediaPlayer != null) {

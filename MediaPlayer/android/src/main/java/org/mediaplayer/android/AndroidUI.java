@@ -345,7 +345,6 @@ public class AndroidUI implements
 
     @Override
     public void onSessionCreationAttempt(String name, String path,
-                                         boolean loop, boolean shuffle,
                                          List<CreationSearchItem> items) {
         path = path.replace("\\", "/");
 
@@ -367,7 +366,8 @@ public class AndroidUI implements
             }
         }
         try {
-            Session session = fileLogic.createSession(sessionParts, entries, completePath, shuffle, loop);
+            Session session = fileLogic.createSession(sessionParts, entries,
+                    completePath, false, false);
             int pos = sessions.addSorted(new SidebarItem(session.getName(), session.id, false));
             sidebarAdapter.expand(sessions);
 
