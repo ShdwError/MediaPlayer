@@ -3,7 +3,6 @@ package org.mediaplayer.core.Generics;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,7 @@ import Tools.Files.Data.DataTypes.DataDate;
 import Tools.Files.Data.DataTypes.DataInt;
 import Tools.Files.Data.DataTypes.DataMap;
 import Tools.Files.Data.DataTypes.DataString;
+import Tools.Util.NaturalOrderComparator;
 
 public abstract class GenericFileLogic {
 
@@ -46,6 +46,8 @@ public abstract class GenericFileLogic {
 	protected PlaylistsData plData;
 	protected DataSystem sDataSystem;
 	protected SessionsData sData;
+
+	private NaturalOrderComparator naturalOrderComparator;
 	
 	public GenericFileLogic(Path path) throws IOException {
 		soundtracks = new HashMap<>();
@@ -53,6 +55,8 @@ public abstract class GenericFileLogic {
 		sessions = new HashMap<>();
 
 		this.path = path;
+
+		this.naturalOrderComparator = new NaturalOrderComparator();
 	}
 	public void create() throws IOException {
 		fTree = createFileTree();
@@ -116,7 +120,7 @@ public abstract class GenericFileLogic {
 		TrackEntry entry = soundtracks.get(entryId);
 		if(entry != null) {
 			entry.inPlaylists.add(playlist.id);
-			return new DataPlaylistEntry(new DataString(entryId), new DataMap<DataString>(DataString::new));
+			return new DataPlaylistEntry(new DataString(entryId), new DataMap<>(DataString::new));
 		}
 		return null;
 	}
@@ -124,7 +128,7 @@ public abstract class GenericFileLogic {
 	public void loadSoundtracks() throws IOException  {
 		stDataSystem = new DataSystem(fTree.get(Path.of("Soundtracks.txt")));
 		stDataSystem.setAdapter(SoundtracksData::new);
-		stDataSystem.addContainerData("Soundtracks", new DataMap<DataString>(DataString::new));
+		stDataSystem.addContainerData("Soundtracks", new DataMap<>(DataString::new));
 		stDataSystem.read();
 		DataContainer dc = stDataSystem.getOrCreate("");
 		
@@ -140,7 +144,7 @@ public abstract class GenericFileLogic {
 	public void loadPlaylists() throws IOException {
 		plDataSystem = new DataSystem(fTree.get(Path.of("Playlists.txt")));
 		plDataSystem.setAdapter(PlaylistsData::new);
-		plDataSystem.addContainerData("Playlists", new DataMap<DataString>(DataString::new));
+		plDataSystem.addContainerData("Playlists", new DataMap<>(DataString::new));
 		plDataSystem.read();
 		DataContainer dc = plDataSystem.getOrCreate("");
 		
@@ -155,7 +159,7 @@ public abstract class GenericFileLogic {
 	public void loadSessions() throws IOException {
 		sDataSystem = new DataSystem(fTree.get(Path.of("Sessions.txt")));
 		sDataSystem.setAdapter(SessionsData::new);
-		sDataSystem.addContainerData("Sessions", new DataMap<DataString>(DataString::new));
+		sDataSystem.addContainerData("Sessions", new DataMap<>(DataString::new));
 		sDataSystem.addContainerData("Current", new DataString());
 		sDataSystem.read();
 		DataContainer dc = sDataSystem.getOrCreate("");
@@ -202,8 +206,8 @@ public abstract class GenericFileLogic {
 			DataSystem ds = new DataSystem(fm);
 			ds.setAdapter(() -> new Playlist(path, id));
 			ds.addContainerData("Description", new DataString());
-			ds.addContainerData("Playlist", new DataArray<DataPlaylistEntry>(DataPlaylistEntry::new));
-			ds.addContainerData("Subplaylists", new DataArray<DataString>(DataString::new));
+			ds.addContainerData("Playlist", new DataArray<>(DataPlaylistEntry::new));
+			ds.addContainerData("Subplaylists", new DataArray<>(DataString::new));
 			try {
 				ds.read();
 			} catch (IOException e) {
@@ -226,11 +230,9 @@ public abstract class GenericFileLogic {
 		if(fm != null) {
 			if(sessions.containsKey(id)) return sessions.get(id);
 			DataSystem ds = new DataSystem(fm);
-			ds.setAdapter(() -> {
-				return new Session(path, id);
-				});
+			ds.setAdapter(() -> new Session(path, id));
 			ds.addContainerData("Description", new DataString());
-			ds.addContainerData("Playlist", new DataArray<DataPlaylistEntry>(DataPlaylistEntry::new));
+			ds.addContainerData("Playlist", new DataArray<>(DataPlaylistEntry::new));
 			ds.addContainerData("Position", new DataInt());
 			ds.addContainerData("Loop", new DataBoolean()); 
 			ds.addContainerData("CreatedOn", new DataDate(true)); 
@@ -408,12 +410,12 @@ public abstract class GenericFileLogic {
 
 	public List<TrackEntry> tracksSortedByName() {
 		return soundtracks.values().stream()
-				.sorted(Comparator.comparing(e -> e.getName().toLowerCase()))
+				.sorted((a, b) -> naturalOrderComparator.compare(a,b))
 				.toList();
 	}
 	public List<Playlist> playlistsSortedByName() {
 		return playlists.values().stream()
-				.sorted(Comparator.comparing(p -> p.getName().toLowerCase()))
+				.sorted((a, b) -> naturalOrderComparator.compare(a,b))
 				.toList();
 	}
 	public int playlistLength(Playlist playlist) {
