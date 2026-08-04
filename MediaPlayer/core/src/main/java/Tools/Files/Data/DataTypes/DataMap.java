@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import Tools.Files.Data.Exceptions.DataTypeException;
+import Tools.Files.Data.Exceptions.InvalidFormatException;
 import Tools.Files.Util;
 import Tools.Files.Data.DataType;
 import Tools.Files.Data.Return2;
@@ -29,22 +31,22 @@ public class DataMap<T extends DataType> extends DataType {
 	}
 	
 	@Override
-	public void setData(String s) {
+	public void setData(String s) throws DataTypeException {
 		created = true;
 		data.clear();
 		if(s.length() < 3) return;
 		while(!s.isEmpty()) {
-			if(s.charAt(0) != '[') throw new Error("Cant read Map");
+			if(s.charAt(0) != '[') throw new InvalidFormatException("Cant read Map");
 			s = s.substring(1);
-			Return2<String, List<String>> ret2 = Util.getStringParts(s, ',', -1);
-			s = ret2.one;
-			String mapping = ret2.two.get(0);
-			String mapData = ret2.two.get(1);
+			Return2<List<String>, String> ret2 = Util.getStringParts(s, ',', 2);
+			s = ret2.two;
+			String mapping = ret2.one.get(0);
+			String mapData = ret2.one.get(1);
 			T mapDataType = supplier.get();
 			mapDataType.setData(mapData);
 			data.put(mapping, mapDataType);
 			if(s.length() > 1) s = s.substring(2);
-			else if(s.length() > 0) s = s.substring(1);
+			else if(!s.isEmpty()) s = s.substring(1);
 		}
 	}
 	@Override

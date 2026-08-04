@@ -28,9 +28,9 @@ public class DataInt extends DataType {
 	
 	@Override
 	public void setData(String s) {
-		if(s.length() == 0) return;
+		if(s.isEmpty()) return;
 		created = true;
-		this.data = Integer.valueOf(s);
+		this.data = Integer.parseInt(s);
 	}
 	@Override
 	public String getData() {

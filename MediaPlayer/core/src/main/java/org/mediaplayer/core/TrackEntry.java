@@ -16,13 +16,13 @@ public class TrackEntry extends DataAdapter {
 	public DataString description;
 	public DataInt length;
 	public Path path;
-	public Set<String> inPlaylists;
 	public String id;
+	public Set<String> inPlaylists;
 	public TrackEntry(Path path, String id) {
+		this.description = new DataString();
+		this.length = new DataInt();
 		this.path = path;
 		this.id = id;
-		this.description = new DataString("");
-		this.length = new DataInt();
 		this.inPlaylists = new HashSet<>();
 	}
 	public String getName() {
@@ -45,8 +45,8 @@ public class TrackEntry extends DataAdapter {
 		return super.equals(obj);
 	}
 	@Override
-	public void createData(Map<String, DataType> data) {
-		description = (DataString) data.get("Description");
-		length = (DataInt) data.get("Length");
+	public void createMapping(Map<String, DataType> data) {
+		data.put("Description", description);
+		data.put("Length", length);
 	}
 }

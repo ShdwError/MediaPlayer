@@ -1,6 +1,7 @@
 package Tools.Files.Data.DataTypes;
 
 import Tools.Files.Data.*;
+import Tools.Files.Data.Exceptions.InvalidFormatException;
 
 public class DataBoolean extends DataType {
 	private boolean data;
@@ -19,12 +20,12 @@ public class DataBoolean extends DataType {
 		return data;
 	}
 	@Override
-	public void setData(String s) {
+	public void setData(String s) throws InvalidFormatException {
 		switch(s) {
 		case "0b": data = false; created = true; break;
 		case "1b": data = true; created = true; break;
 		case "": break;
-		default: throw new Error("Cant read boolean");
+		default: throw new InvalidFormatException("Cant read boolean");
 		}
 	}
 

@@ -17,6 +17,7 @@ import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
 import org.mediaplayer.core.UtilFunctions;
 
+import Tools.Files.Data.Exceptions.DataTypeException;
 import Tools.Files.DataSystem;
 import Tools.Files.GenericFileManager;
 import Tools.Files.GenericFileTree;
@@ -40,11 +41,11 @@ public abstract class GenericFileLogic {
 	protected Path path;
 	protected GenericAudio audio;
 
-	protected DataSystem stDataSystem;
+	protected DataSystem<SoundtracksData> stDataSystem;
 	protected SoundtracksData stData;
-	protected DataSystem plDataSystem;
+	protected DataSystem<PlaylistsData> plDataSystem;
 	protected PlaylistsData plData;
-	protected DataSystem sDataSystem;
+	protected DataSystem<SessionsData> sDataSystem;
 	protected SessionsData sData;
 
 	private NaturalOrderComparator naturalOrderComparator;
@@ -58,7 +59,7 @@ public abstract class GenericFileLogic {
 
 		this.naturalOrderComparator = new NaturalOrderComparator();
 	}
-	public void create() throws IOException {
+	public void create() throws IOException, DataTypeException {
 		fTree = createFileTree();
 		fTree.createFile(Path.of("Soundtracks.txt"));
 		fTree.createFile(Path.of("Playlists.txt"));
@@ -89,8 +90,8 @@ public abstract class GenericFileLogic {
 			playlist.addSubplaylist(subPlaylistId);
 		}
 		playlist.reorganize();
-		playlist.dataContainer.system.save();
-		plData.dataContainer.system.save();
+		playlist.dataSystem.save();
+		plData.dataSystem.save();
 		return playlist;
 	}
 	public Session createSession(List<Playlist> sessionParts, List<String> entries, Path path, boolean looping, boolean shuffle) throws IOException {
@@ -111,8 +112,8 @@ public abstract class GenericFileLogic {
 		
 		session.reorganize();
 		
-		session.dataContainer.system.save();
-		sData.dataContainer.system.save();
+		session.dataSystem.save();
+		sData.dataSystem.save();
 		
 		return session;
 	}
@@ -125,14 +126,11 @@ public abstract class GenericFileLogic {
 		return null;
 	}
 	//Load Functions
-	public void loadSoundtracks() throws IOException  {
-		stDataSystem = new DataSystem(fTree.get(Path.of("Soundtracks.txt")));
-		stDataSystem.setAdapter(SoundtracksData::new);
-		stDataSystem.addContainerData("Soundtracks", new DataMap<>(DataString::new));
+	public void loadSoundtracks() throws IOException, DataTypeException {
+		stDataSystem = new DataSystem<>(fTree.get(Path.of("Soundtracks.txt")), SoundtracksData::new);
 		stDataSystem.read();
-		DataContainer dc = stDataSystem.getOrCreate("");
-		
-		stData = (SoundtracksData) dc.adapter;
+		stData = stDataSystem.getOrCreate();
+
 		correctPathData(stData.soundtracks);
 		stData.soundtracks.forEach((id, data) -> {
 			Path cPath = Path.of(data.get());
@@ -141,14 +139,11 @@ public abstract class GenericFileLogic {
 			soundtracks.put(id, entry);
 		});
 	}
-	public void loadPlaylists() throws IOException {
-		plDataSystem = new DataSystem(fTree.get(Path.of("Playlists.txt")));
-		plDataSystem.setAdapter(PlaylistsData::new);
-		plDataSystem.addContainerData("Playlists", new DataMap<>(DataString::new));
+	public void loadPlaylists() throws IOException, DataTypeException {
+		plDataSystem = new DataSystem<>(fTree.get(Path.of("Playlists.txt")), PlaylistsData::new);
 		plDataSystem.read();
-		DataContainer dc = plDataSystem.getOrCreate("");
-		
-		plData = (PlaylistsData) dc.adapter;
+		plData = plDataSystem.getOrCreate();
+
 		correctPathData(plData.playlists);
 		plData.playlists.forEach((id, data) -> {
 			GenericFileManager fm = fTree.get(Path.of(data.get()));
@@ -156,17 +151,13 @@ public abstract class GenericFileLogic {
 			//if(playlist == null) plData.playlists.remove(id);
 		});
 	}
-	public void loadSessions() throws IOException {
-		sDataSystem = new DataSystem(fTree.get(Path.of("Sessions.txt")));
-		sDataSystem.setAdapter(SessionsData::new);
-		sDataSystem.addContainerData("Sessions", new DataMap<>(DataString::new));
-		sDataSystem.addContainerData("Current", new DataString());
+	public void loadSessions() throws IOException, DataTypeException {
+		sDataSystem = new DataSystem<>(fTree.get(Path.of("Sessions.txt")), SessionsData::new);
 		sDataSystem.read();
-		DataContainer dc = sDataSystem.getOrCreate("");
+		sData = sDataSystem.getOrCreate();
 
 		List<String> toRemove = new ArrayList<>();
-		
-		sData = (SessionsData) dc.adapter;
+
 		correctPathData(sData.sessions);
 		sData.sessions.forEach((id, data) -> {
 			GenericFileManager fm = fTree.get(Path.of(data.get()));
@@ -178,19 +169,17 @@ public abstract class GenericFileLogic {
 			sData.sessions.remove(id);
 	}
 	//Read Functions
-	public TrackEntry readEntry(TrackEntry entry, GenericFileManager fm) {
+	public TrackEntry readEntry(TrackEntry entry, GenericFileManager fm)  {
 		if(fm != null) {
-			DataSystem ds = new DataSystem(fm);
-			ds.setAdapter(() -> entry);
-			ds.addContainerData("Description", new DataString());
-			ds.addContainerData("Length", new DataInt());
-			try {
-				ds.read();
-				ds.createNewDataContainer("");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			if(!entry.length.created) {
+			DataSystem<TrackEntry> ds = new DataSystem<>(fm, () -> entry);
+            try {
+                ds.read();
+            } catch (IOException | DataTypeException e) {
+                throw new RuntimeException(e);
+            }
+			ds.createNewDataContainer("");
+
+            if(!entry.length.created) {
 				audio.setMediaLength(entry);
 			}
 		}
@@ -203,17 +192,13 @@ public abstract class GenericFileLogic {
 
 	public Playlist readPlaylist(GenericFileManager fm, Path path, String id) {
 		if(fm != null) {
-			DataSystem ds = new DataSystem(fm);
-			ds.setAdapter(() -> new Playlist(path, id));
-			ds.addContainerData("Description", new DataString());
-			ds.addContainerData("Playlist", new DataArray<>(DataPlaylistEntry::new));
-			ds.addContainerData("Subplaylists", new DataArray<>(DataString::new));
+			DataSystem<Playlist> ds = new DataSystem(fm, () -> new Playlist(path, id));
 			try {
 				ds.read();
-			} catch (IOException e) {
+			} catch (IOException | DataTypeException e) {
 				e.printStackTrace();
 			}
-			Playlist playlist =  (Playlist) ds.getOrCreate("").adapter;
+			Playlist playlist = ds.getOrCreate();
 			if(playlist != null) {
 				for(int i = 0; i < playlist.size(); i++) {
 					TrackEntry entry = soundtracks.get(playlist.getId(i));
@@ -229,21 +214,13 @@ public abstract class GenericFileLogic {
 	public Session readSession(GenericFileManager fm, Path path, String id)  {
 		if(fm != null) {
 			if(sessions.containsKey(id)) return sessions.get(id);
-			DataSystem ds = new DataSystem(fm);
-			ds.setAdapter(() -> new Session(path, id));
-			ds.addContainerData("Description", new DataString());
-			ds.addContainerData("Playlist", new DataArray<>(DataPlaylistEntry::new));
-			ds.addContainerData("Position", new DataInt());
-			ds.addContainerData("Loop", new DataBoolean()); 
-			ds.addContainerData("CreatedOn", new DataDate(true)); 
-			ds.addContainerData("LastOpened", new DataDate()); 
-			
+			DataSystem<Session> ds = new DataSystem<>(fm, () -> new Session(path, id));
 			try {
 				ds.read();
-			} catch (IOException e) {
+			} catch (IOException | DataTypeException e) {
 				e.printStackTrace();
 			}
-			Session session =  (Session) ds.getOrCreate("").adapter;
+			Session session = ds.getOrCreate();
 			if(session != null) {
 				session.reorganize();
 				sessions.put(id, session);
@@ -260,7 +237,7 @@ public abstract class GenericFileLogic {
 		session.path = newPath;
 		sData.sessions.put(session.id, new DataString(newPath.toString()));
 		try {
-			session.dataContainer.system.changeFileManager(fTree.rename(oldPath, newPath));
+			session.dataSystem.changeFileManager(fTree.rename(oldPath, newPath));
 			sDataSystem.save();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -273,7 +250,7 @@ public abstract class GenericFileLogic {
 		playlist.path = newPath;
 		plData.playlists.put(playlist.id, new DataString(newPath.toString()));
 		try {
-			playlist.dataContainer.system.changeFileManager(fTree.rename(oldPath, newPath));
+			playlist.dataSystem.changeFileManager(fTree.rename(oldPath, newPath));
 			plDataSystem.save();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -294,7 +271,7 @@ public abstract class GenericFileLogic {
 			fTree.rename(oldPath, newPath);
 			GenericFileManager newTrackManager = fTree.rename(UtilFunctions.getSoundtrackInfoPath(oldPath), UtilFunctions.getSoundtrackInfoPath(newPath));
 			
-			entry.dataContainer.system.changeFileManager(newTrackManager);
+			entry.dataSystem.changeFileManager(newTrackManager);
 			stDataSystem.save();
 			
 			if(entry.id.equals(audio.getCurrentTrack().id)) {
@@ -379,24 +356,24 @@ public abstract class GenericFileLogic {
 		soundtracks.forEach((id,entry) -> {
 			stData.soundtracks.put(id, new DataString(entry.path.toString()));
 			try {
-				if(entry.dataContainer != null) 
-					entry.dataContainer.system.save();
+				if(entry.dataSystem != null)
+					entry.dataSystem.save();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		});
 		playlists.forEach((id,playlist) -> {
 			try {
-				if(playlist.dataContainer != null)
-					playlist.dataContainer.system.save();
+				if(playlist.dataSystem != null)
+					playlist.dataSystem.save();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		});
 		sessions.forEach((id,session) -> {
 			try {
-				if(session.dataContainer != null)
-					session.dataContainer.system.save();
+				if(session.dataSystem != null)
+					session.dataSystem.save();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

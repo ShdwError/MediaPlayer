@@ -118,7 +118,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         notifyItemMoved(from, to);
 
         try {
-            playlist.dataContainer.system.save();
+            playlist.dataSystem.save();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

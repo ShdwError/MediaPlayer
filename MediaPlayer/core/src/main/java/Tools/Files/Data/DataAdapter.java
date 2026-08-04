@@ -2,8 +2,10 @@ package Tools.Files.Data;
 
 import java.util.Map;
 
+import Tools.Files.DataSystem;
+
 public abstract class DataAdapter {
-	public DataContainer dataContainer;
-	public abstract void createData(Map<String, DataType> data);
+	public DataSystem dataSystem;
+	public abstract void createMapping(Map<String, DataType> data);
 
 }

@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.mediaplayer.core.UtilFunctions;
 
+import Tools.Files.Data.Exceptions.DataTypeException;
+import Tools.Files.Data.Exceptions.InvalidFormatException;
+import Tools.Files.DataParser;
 import Tools.Files.Util;
 import Tools.Files.Data.DataType;
 import Tools.Files.Data.DataTypes.*;
@@ -43,17 +46,12 @@ public class DataPlaylistEntry extends DataType {
 	
 	
 	@Override
-	public void setData(String s) {
+	public void setData(String s) throws DataTypeException {
 		if(s == null) return;
-		
-		int length = s.length()-2;
-		if(s.length() < 3) return;
-		if(s.charAt(0) != '{' || s.charAt(length+1) != '}') throw new Error("Cant read PlaylistEntry");
-		s = s.substring(1);
-		List<String> parts = Util.getStringParts(s, ',', 2).two;
-		
-		id.setData(parts.get(0));
-		tags.setData(parts.get(1));
+		DataParser parser = DataParser.start("{").parse().parse().expect("}");
+		List<List<String>> parsed = parser.parse(s);
+		id.setData(parsed.get(0).get(0));
+		tags.setData(parsed.get(1).get(0));
 		
 		this.created = true;
 	}

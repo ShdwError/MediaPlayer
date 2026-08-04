@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import Tools.Files.Data.Exceptions.DataTypeException;
+
 public class MainActivity extends AppCompatActivity {
 
     private AndroidFileLogic fileLogic;
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             this.fileLogic.create(audio);
             this.audio.create(fileLogic, ui);
             this.ui.create(audio, fileLogic);
-        } catch (IOException e) {
+        } catch (IOException | DataTypeException e) {
             throw new RuntimeException(e);
         }
         Log.println(Log.ASSERT, "Test", "Finish");

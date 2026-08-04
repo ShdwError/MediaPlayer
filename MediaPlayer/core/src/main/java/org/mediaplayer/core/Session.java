@@ -21,6 +21,10 @@ public class Session extends Playlist {
 	public DataDate lastOpened;
 	public Session(Path path, String id) {
 		super(path, id);
+		this.pos = new DataInt();
+		this.loop = new DataBoolean();
+		this.created = new DataDate();
+		this.lastOpened = new DataDate();
 	}
 	@Override
 	public String getName() {
@@ -49,21 +53,17 @@ public class Session extends Playlist {
 		pos.add(-1);
 		return get(pos.get());
 	}
-	
-	
+
 	@Override
-	public void createData(Map<String, DataType> data) {
-		this.description = (DataString) data.get("Description");
-		this.create(((DataArray<DataPlaylistEntry>) data.get("Playlist")).get());
-		this.pos = (DataInt) data.get("Position");
-		this.loop = (DataBoolean) data.get("Loop");
-		this.created = (DataDate) data.get("CreatedOn");
-		this.lastOpened = (DataDate) data.get("LastOpened");
+	public void createMapping(Map<String, DataType> data) {
+		data.put("Description", description);
+		data.put("Playlist", new DataArray<>(DataPlaylistEntry::new, get()));
+		data.put("Position", pos);
+		data.put("Loop", loop);
+		data.put("CreatedOn", created);
+		data.put("LastOpened", lastOpened);
 	}
-	
-	
-	
-	
+
 	public void shuffle(boolean skipActive) {
 		Random random = new Random();
 		
@@ -369,7 +369,7 @@ public class Session extends Playlist {
 		   		reorganized.addAll(addToEnd);
 		   	}
 	   	}
-	   	
+
 	   	if(reorganized.size() != ordered.size()) {
 	   		System.out.println();
 	   		System.out.println(reorganized.size());

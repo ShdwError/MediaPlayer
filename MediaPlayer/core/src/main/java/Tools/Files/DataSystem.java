@@ -11,50 +11,45 @@ import Tools.Files.Data.DataAdapter;
 import Tools.Files.Data.DataContainer;
 import Tools.Files.Data.DataType;
 import Tools.Files.Data.DataTypes.DataString;
+import Tools.Files.Data.Exceptions.DataTypeException;
 
-public class DataSystem {
+public class DataSystem<D extends DataAdapter> {
 	private GenericFileManager fileManager;
-	public Map<String, DataContainer> dataContainers;
-	public Supplier<DataAdapter> adapter;
-	public Map<String, DataType> containerData;
-	public DataSystem(GenericFileManager fileManager) {
+	public Map<String, DataContainer<D>> dataContainers;
+	public Supplier<D> adapter;
+	public DataSystem(GenericFileManager fileManager, Supplier<D> adapter) {
 		this.fileManager = fileManager;
 		dataContainers = new HashMap<>();
-		containerData = new HashMap<>();
 		
-		adapter = null;
-	}
-	public void setAdapter(Supplier<DataAdapter> adapter) {
 		this.adapter = adapter;
 	}
-	public void addContainerData(String mapping, DataType data) {
-		containerData.put(mapping, data);
-	}
-	public void read() throws IOException {
+	public void read() throws IOException, DataTypeException {
 		List<String> lines = fileManager.read();
 		dataContainers.clear();
-		DataContainer container = new DataContainer(this);
+		DataContainer<D> container = new DataContainer<>(adapter.get());
+		container.adapter.dataSystem = this;
 		String id = "";
 		boolean hasData = false;
 		for(String s: lines) {
 			if(s.equals("/")) {
-				container.addAdapter();
 				dataContainers.put(id, container);
-				container = new DataContainer(this);
+				container = new DataContainer<>(adapter.get());
+				container.adapter.dataSystem = this;
 				hasData = false;
 				id = "";
 			}
 			else {
-				String sign = Util.getSign(s);
-				String data = s.substring(sign.length()+1);
+				String[] split = Util.split(s);
+				String sign = split[0];
+				String data = split[1];
 				if(sign.equals("Id")) id = data;
 				container.setData(sign, data);
 				hasData = true;
 			}
 		}
 		if(hasData) {
-			container.addAdapter();
 			dataContainers.put(id, container);
+			container.adapter.dataSystem = this;
 		}
 	}
 	public void save() throws IOException {
@@ -65,23 +60,32 @@ public class DataSystem {
 			});
 			lines.add("/");
 		});
+		//Remove last "/"
+		if(!lines.isEmpty())
+			lines.remove(lines.size()-1);
 		fileManager.write(lines);
 	}
-	public DataContainer getOrCreate(String id) {
+	public D getOrCreate(String id) {
 		if(dataContainers.containsKey(id)) return get(id);
-		else return createNewDataContainer(id);
+		return createNewDataContainer(id);
 	}
-	public DataContainer get(String id) {
-		return dataContainers.get(id);
+	public D getOrCreate() {
+		return getOrCreate("");
 	}
-	public DataContainer createNewDataContainer(String id) {
+	public D get(String id) {
+		return dataContainers.get(id).adapter;
+	}
+	public D createNewDataContainer(String id) {
 		if(dataContainers.containsKey(id)) return null;
-		DataContainer container = new DataContainer(this);
-		container.addAdapter();
-		if(containerData.containsKey("Id"))
-			container.setData("Id", id);
+		DataContainer<D> container = new DataContainer<>(adapter.get());
+		if(container.data.containsKey("Id")) {
+            try {
+                container.setData("Id", id);
+            } catch (DataTypeException ignored) {}
+        }
 		dataContainers.put(id, container);
-		return container;
+		container.adapter.dataSystem = this;
+		return container.adapter;
 	}
 	public void changeFileManager(GenericFileManager fileManager) {
 		this.fileManager = fileManager;

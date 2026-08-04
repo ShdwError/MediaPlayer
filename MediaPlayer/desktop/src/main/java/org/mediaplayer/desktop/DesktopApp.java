@@ -5,9 +5,11 @@ import org.mediaplayer.core.Generics.GenericFileLogic;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import Tools.Files.Data.Exceptions.DataTypeException;
+
 public class DesktopApp {
 	public ConsoleUI ui;
-	public DesktopApp(Path path) throws IOException {
+	public DesktopApp(Path path) throws IOException, DataTypeException {
 		DesktopFileLogic fileLogic = new DesktopFileLogic(path);
 		ConsoleUI ui = new ConsoleUI();
 		DesktopAudio audio = new DesktopAudio(path);

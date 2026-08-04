@@ -6,4 +6,5 @@ module org.mediaplayer.core {
     exports Tools.Files;
     exports Tools.Files.Data;
     exports Tools.Files.Data.DataTypes;
+    exports Tools.Files.Data.Exceptions;
 }

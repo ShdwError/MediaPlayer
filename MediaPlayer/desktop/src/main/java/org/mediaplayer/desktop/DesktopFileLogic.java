@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import Tools.Files.Data.DataTypes.DataString;
+import Tools.Files.Data.Exceptions.DataTypeException;
 import Tools.Files.FileTree;
 import Tools.Files.GenericFileTree;
 
@@ -17,7 +18,7 @@ public class DesktopFileLogic extends GenericFileLogic {
 		super(path);
 	}
 
-	public void create(ConsoleUI ui, DesktopAudio audio) throws IOException {
+	public void create(ConsoleUI ui, DesktopAudio audio) throws IOException, DataTypeException {
 		this.ui = ui;
 		this.audio = audio;
 		super.create();

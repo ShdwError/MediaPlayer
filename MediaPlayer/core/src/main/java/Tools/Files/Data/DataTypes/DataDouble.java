@@ -20,9 +20,9 @@ public class DataDouble extends DataType {
 	}
 	@Override
 	public void setData(String s) {
-		if(s.length() == 0) return;
+		if(s.isEmpty()) return;
 		created = true;
-		this.data = Double.valueOf(s);
+		this.data = Double.parseDouble(s);
 	}
 	@Override
 	public String getData() {

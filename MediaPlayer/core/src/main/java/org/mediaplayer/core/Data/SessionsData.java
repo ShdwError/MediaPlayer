@@ -1,5 +1,6 @@
 package org.mediaplayer.core.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import Tools.Files.Data.DataAdapter;
@@ -11,10 +12,15 @@ public class SessionsData extends DataAdapter {
 
 	public Map<String, DataString> sessions;
 	public DataString currentSession;
-	@Override
-	public void createData(Map<String, DataType> data) {
-		sessions = ((DataMap<DataString>) data.get("Sessions")).get();
-		currentSession = (DataString) data.get("Current");
+
+	public SessionsData() {
+		sessions = new HashMap<>();
+		currentSession = new DataString();
 	}
 
+	@Override
+	public void createMapping(Map<String, DataType> data) {
+		data.put("Sessions", new DataMap<>(DataString::new, sessions));
+		data.put("Current", currentSession);
+	}
 }

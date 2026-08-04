@@ -23,26 +23,32 @@ public abstract class Endpoint{
 	public abstract void write(String s);
 	public abstract void onClose(int statusCode, String reason);
 	public void onAnswer(String s) {
-		String id = Util.getSign(s);
-		s = s.substring(id.length()+1);
+		String[] split = Util.split(s);
+		String id = split[0];
+		s = split[1];
 		pending.remove(id).complete(s);
 	}
 	public void onText(String text) {
 		System.out.println("onText: " + text);
 		threadSystem.multiThread(() -> {
-			String sign = Util.getSign(text);
+			String[] split = Util.split(text);
+			if(split == null)
+				return;
+			String sign = split[0];
 			System.out.println("sign: " + sign);
-			if(sign == null) return;
             switch(sign) {
-                case "I" -> onInstruction(text.substring(2));
-                case "R" -> answerClientRequest(text.substring(2));
-                case "A" -> onAnswer(text.substring(2));
+                case "I" -> onInstruction(split[1]);
+                case "R" -> answerClientRequest(split[1]);
+                case "A" -> onAnswer(split[1]);
             }
 		});
 	}
 	public void answerClientRequest(String s) {
-		String id = Util.getSign(s);
-		s = s.substring(id.length()+1);
+		String[] split = Util.split(s);
+		if(split == null)
+			return;
+		String id = split[0];
+		s = split[1];
 
 		System.out.println("Answer: " + id + ":" + s);
 		String answer = onRequest(s);

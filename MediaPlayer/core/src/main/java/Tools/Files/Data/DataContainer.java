@@ -3,30 +3,18 @@ package Tools.Files.Data;
 import java.util.HashMap;
 import java.util.Map;
 
+import Tools.Files.Data.Exceptions.DataTypeException;
 import Tools.Files.DataSystem;
 
-public class DataContainer {
-	public DataSystem system;
+public class DataContainer<D extends DataAdapter> {
 	public Map<String, DataType> data;
-	public DataAdapter adapter;
-	public DataContainer(DataSystem system) {
-		this.system = system;
+	public D adapter;
+	public DataContainer(D adapter) {
+		this.adapter = adapter;
 		data = new HashMap<>();
-		createData();
+		adapter.createMapping(data);
 	}
-	public void createData() {
-		system.containerData.forEach((s,a) -> {
-			data.put(s, a.instance());
-		});
-	}
-	public void addAdapter() {
-		if(system.adapter != null) {
-			adapter = system.adapter.get();
-			adapter.createData(data);
-			adapter.dataContainer = this;
-		}
-	}
-	public void setData(String s, String data) {
+	public void setData(String s, String data) throws DataTypeException {
 		this.data.get(s).setData(data);
 	}
 	public DataType getData(String s) {

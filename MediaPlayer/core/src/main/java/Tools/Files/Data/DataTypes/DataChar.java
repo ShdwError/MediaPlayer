@@ -1,6 +1,8 @@
 package Tools.Files.Data.DataTypes;
 
 import Tools.Files.Data.DataType;
+import Tools.Files.Data.Exceptions.DataTypeException;
+import Tools.Files.Data.Exceptions.InvalidFormatException;
 
 public class DataChar extends DataType {
 	private char data;
@@ -16,10 +18,10 @@ public class DataChar extends DataType {
 		this.created = true;
 	}
 	@Override
-	public void setData(String s) {
-		if(s.length() == 0) return;
+	public void setData(String s) throws DataTypeException {
+		if(s.isEmpty()) return;
 		created = true;
-		if(s.length() != 1) throw new Error("Cant read char");
+		if(s.length() != 1) throw new InvalidFormatException("Cant read char");
 		data = s.charAt(0);
 	}
 	@Override

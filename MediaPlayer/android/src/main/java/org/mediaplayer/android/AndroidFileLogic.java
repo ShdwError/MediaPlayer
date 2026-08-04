@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import Tools.Files.AndroidFileTree;
 import Tools.Files.Data.DataTypes.DataString;
+import Tools.Files.Data.Exceptions.DataTypeException;
 import Tools.Files.GenericFileManager;
 import Tools.Files.GenericFileTree;
 import Tools.Files.Util;
@@ -25,7 +26,7 @@ public class AndroidFileLogic extends GenericFileLogic {
         this.context = context;
     }
 
-    public void create(AndroidAudio audio) throws IOException {
+    public void create(AndroidAudio audio) throws IOException, DataTypeException {
         this.audio = audio;
         super.create();
     }

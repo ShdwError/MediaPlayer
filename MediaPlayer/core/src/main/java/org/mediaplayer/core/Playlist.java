@@ -28,10 +28,12 @@ public class Playlist extends DataAdapter {
 	public Playlist(Path path, String id) {
 		this.path = path;
 		this.id = id;
+		this.description = new DataString();
+		this.shuffle = new DataBoolean();
+		this.playlist = new ArrayList<>();
+		this.subplaylists = new ArrayList<>();
 		this.uniqueEntrySet = new HashSet<>();
 		this.uniquePlaylistSet = new HashSet<>();
-		this.subplaylists = new ArrayList<>();
-		this.playlist = new ArrayList<>();
 	}
 	public String getName() {
 		return Util.getNameAndType(Path.of("Playlists").relativize(path).toString())[0];
@@ -132,14 +134,6 @@ public class Playlist extends DataAdapter {
 		}
 	}
 	
-	@Override
-	public void createData(Map<String, DataType> data) {
-		this.description = (DataString) data.get("Description");
-		this.create(((DataArray<DataPlaylistEntry>) data.get("Playlist")).get());
-		this.subplaylists = ((DataArray<DataString>) data.get("Subplaylists")).get();
-		this.shuffle = (DataBoolean) data.get("Shuffle");
-	}
-	
 	public List<DataPlaylistEntry> reorganize() {
 		Map<String, DataPlaylistEntry> entryMap = new HashMap<>();
 		
@@ -194,4 +188,10 @@ public class Playlist extends DataAdapter {
 		return super.equals(obj);
 	}
 
+	@Override
+	public void createMapping(Map<String, DataType> data) {
+		data.put("Description", description);
+		data.put("Playlist", new DataArray<>(DataPlaylistEntry::new, playlist));
+		data.put("Subplaylists", new DataArray<>(DataString::new, subplaylists));
+	}
 }
