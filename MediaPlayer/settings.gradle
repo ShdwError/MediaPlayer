@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "MediaPlayer"
 
 include("core", "desktop", "android")
+include ':server'
