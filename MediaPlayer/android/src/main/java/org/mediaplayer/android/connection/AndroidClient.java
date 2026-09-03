@@ -1,8 +1,8 @@
 package org.mediaplayer.android.connection;
 
-import Tools.Connection.Client;
+import Tools.Connection.GenericAndroidClient;
 
-public class AndroidClient extends Client {
+public class AndroidClient extends GenericAndroidClient {
     public AndroidClient(String host, int port, String name) {
         super(host, port, name);
     }

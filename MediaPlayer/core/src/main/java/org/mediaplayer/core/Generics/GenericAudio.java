@@ -1,14 +1,14 @@
 package org.mediaplayer.core.Generics;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
-import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
+import org.mediaplayer.core.DataPlaylistEntry;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
+import org.mediaplayer.core.Interfaces.AudioController;
 
-public abstract class GenericAudio {
+public abstract class GenericAudio implements AudioController {
 
 	protected Session currentSession;
 	protected TrackEntry currentTrack;
@@ -19,10 +19,12 @@ public abstract class GenericAudio {
 	
 	public abstract void playSoundtrack(TrackEntry entry);
 	public void playSession(Session session) {
+		if(session == null)
+			return;
 		session.lastOpened.set(LocalDateTime.now());
 
 		currentSession = session;
-		fileLogic.getCurrentSessionData().set(session.id);
+		fileLogic.onPlaySession(session);
 		DataPlaylistEntry dpe = session.getCurrent();
 		if(dpe == null) {
 			closePlayer();
@@ -55,8 +57,7 @@ public abstract class GenericAudio {
 
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 		if(entry != null) {
-			playAndSetNext(entry);
-			onPlayTrack(entry);
+			playEntry(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");
@@ -77,8 +78,7 @@ public abstract class GenericAudio {
 
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 		if(entry != null) {
-			playAndSetNext(entry);
-			onPlayTrack(entry);
+			playEntry(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");
@@ -99,13 +99,26 @@ public abstract class GenericAudio {
 
 		TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 		if(entry != null) {
-			playAndSetNext(entry);
-			onPlayTrack(entry);
+			playEntry(entry);
 		}
 		else {
 			onError("Soundtrack " + dpe.id + " not found");
 			playPreviousTrack();
 		}
+	}
+	private void playEntry(TrackEntry entry) {
+		playAndSetNext(entry);
+		onPlayTrack(entry);
+		fileLogic.onPlayEntry(currentSession, entry);
+	}
+	public void reset() {
+		boolean wasPaused = isPaused();
+		Session newSession = null;
+		if(currentSession != null)
+			newSession = fileLogic.sessions.get(currentSession.id);
+		playSession(newSession);
+		if(wasPaused)
+			pause();
 	}
 	public abstract void playAndSetNext(TrackEntry entry);
 	
@@ -116,12 +129,16 @@ public abstract class GenericAudio {
 	public abstract double getVolume();
 	public abstract void play();
 	public abstract void pause();
+	public abstract boolean isPaused();
 
 	public Session getCurrentSession() {
 		return currentSession;
 	}
 	public TrackEntry getCurrentTrack() {
 		return currentTrack;
+	}
+	public boolean isCurrentTrack(TrackEntry entry) {
+		return entry.id.equals(getCurrentTrack().id) && hasPlayer();
 	}
 	
 	public abstract boolean hasPlayer();

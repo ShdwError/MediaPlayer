@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
-
-import Tools.Files.Util;
-import Tools.Files.Data.DataType;
-import Tools.Files.Data.DataTypes.*;
+import Tools.Core.Files.Util;
+import Tools.Core.Files.Data.DataType;
+import Tools.Core.Files.Data.DataTypes.*;
 
 public class Session extends Playlist {
 	public DataInt pos;
@@ -25,6 +23,15 @@ public class Session extends Playlist {
 		this.loop = new DataBoolean();
 		this.created = new DataDate();
 		this.lastOpened = new DataDate();
+	}
+	public Session(Path path, String id, List<DataPlaylistEntry> playlist, DataInt pos, DataBoolean loop, DataDate created, DataDate lastOpened) {
+		super(path, id);
+		this.pos = pos;
+		this.loop = loop;
+		this.created = created;
+		this.lastOpened = lastOpened;
+		
+		this.add(playlist);
 	}
 	@Override
 	public String getName() {
@@ -47,6 +54,12 @@ public class Session extends Playlist {
 		if(i < 0 || i >= size()) return null;
 		pos.set(i);
 		return get(i);
+	}
+	public DataPlaylistEntry moveTo(String trackId) {
+		DataPlaylistEntry dpe = get(trackId);
+		if(dpe == null) return null;
+		pos.set(get().indexOf(dpe));
+		return dpe;
 	}
 	public DataPlaylistEntry getPrevious() {
 		if(pos.get() == 0) return null;

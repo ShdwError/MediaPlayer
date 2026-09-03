@@ -1,7 +1,31 @@
 plugins {
-    id 'java-library'
+    id 'application'
+}
+repositories {
+    mavenCentral()
 }
 java {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+dependencies {
+    implementation project(':core')
+    implementation project(':desktop')
+    
+    implementation 'org.eclipse.jetty:jetty-server:12.0.22'
+    implementation 'org.eclipse.jetty.websocket:jetty-websocket-jetty-server:12.0.22'
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+application {
+    mainClass = 'org.mediaplayer.server.Start'
+    mainModule = 'org.mediaplayer.server'
+}
+test {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }

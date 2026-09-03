@@ -5,12 +5,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
-
-import Tools.Files.Util;
-import Tools.Files.Data.DataAdapter;
-import Tools.Files.Data.DataType;
-import Tools.Files.Data.DataTypes.*;
+import Tools.Core.Files.Util;
+import Tools.Core.Files.Data.DataAdapter;
+import Tools.Core.Files.Data.DataType;
+import Tools.Core.Files.Data.DataTypes.*;
 
 public class TrackEntry extends DataAdapter {
 	public DataString description;
@@ -21,6 +19,13 @@ public class TrackEntry extends DataAdapter {
 	public TrackEntry(Path path, String id) {
 		this.description = new DataString();
 		this.length = new DataInt();
+		this.path = path;
+		this.id = id;
+		this.inPlaylists = new HashSet<>();
+	}
+	public TrackEntry(Path path, DataString description, DataInt length, String id) {
+		this.description = description;
+		this.length = length;
 		this.path = path;
 		this.id = id;
 		this.inPlaylists = new HashSet<>();

@@ -4,10 +4,10 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 import org.mediaplayer.core.Generics.GenericFileLogic;
+import org.mediaplayer.core.DataPlaylistEntry;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
 import org.mediaplayer.core.UtilFunctions;
-import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 import org.mediaplayer.core.Generics.GenericAudio;
 
 import javafx.application.Platform;
@@ -104,7 +104,11 @@ public class DesktopAudio extends GenericAudio {
 		if(mediaPlayer != null)
 			mediaPlayer.pause();
 	}
-
+	@Override
+	public boolean isPaused() {
+		return !mediaPlayer.isAutoPlay();
+	}
+	
 	@Override
 	public boolean hasPlayer() {
 		return mediaPlayer != null;

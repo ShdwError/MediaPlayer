@@ -12,18 +12,21 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.mediaplayer.core.Generics.GenericFileLogic;
+import org.mediaplayer.core.Generics.GenericUI;
+
+import Tools.Core.Files.Util;
+import Tools.Core.Files.Data.DataTypes.DataMap;
+import Tools.Core.Files.Data.DataTypes.DataString;
+
+import org.mediaplayer.core.DataPlaylistEntry;
 import org.mediaplayer.core.Playlist;
 import org.mediaplayer.core.Session;
 import org.mediaplayer.core.TrackEntry;
 import org.mediaplayer.core.UtilFunctions;
-import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
 
-import Tools.Files.Util;
-import Tools.Files.Data.DataTypes.DataMap;
-import Tools.Files.Data.DataTypes.DataString;
 import javafx.application.Platform;
 
-public class ConsoleUI {
+public class ConsoleUI extends GenericUI {
 	private GenericFileLogic fileLogic;
 	private DesktopAudio audio;
 	
@@ -249,14 +252,14 @@ public class ConsoleUI {
 					s = sc.nextLine().strip();
 					while(s.equals("")) s = sc.nextLine().strip();
 					Playlist playlist = findPlaylist(s, sc);
-					if(playlist != null) {
+					DataPlaylistEntry dpe = null;
+					if(audio.getCurrentSession() != null)
+						dpe = audio.getCurrentSession().getCurrent().copy();
+					else
+						dpe = new DataPlaylistEntry(new DataString(audio.getCurrentTrack().id));
+
+					if(fileLogic.addSoundtrackTo(dpe, playlist))
 						System.out.println(audio.getCurrentTrack().getName() + " added to " + playlist.getName());
-						audio.getCurrentTrack().inPlaylists.add(playlist.id);
-						if(audio.getCurrentSession() != null)
-							playlist.add(audio.getCurrentSession().getCurrent().copy());
-						else
-							playlist.add(new DataPlaylistEntry(new DataString(audio.getCurrentTrack().id), new DataMap<DataString>(DataString::new)));
-					}
 				}
 				else if(s.equals("removefrom") || s.equals("rmvfrom")) {
 					if(audio.getCurrentTrack() == null) {
@@ -266,11 +269,9 @@ public class ConsoleUI {
 					s = sc.nextLine().strip();
 					while(s.equals("")) s = sc.nextLine().strip();
 					Playlist playlist = findPlaylist(s, sc);
-					if(playlist != null && audio.getCurrentTrack().inPlaylists.contains(playlist.id)) {
+					
+					if(fileLogic.removeSoundtrackFrom(audio.getCurrentTrack(), playlist))
 						System.out.println(audio.getCurrentTrack().getName() + " removed from " + playlist.getName());
-						audio.getCurrentTrack().inPlaylists.remove(playlist.id);
-						playlist.remove(audio.getCurrentTrack());
-					}
 				}
 				else if(s.equals("linkto")) {
 					s = sc.next();
@@ -294,10 +295,8 @@ public class ConsoleUI {
 					}
 					else {
 						TrackEntry entry2 = fileLogic.soundtracks.get(session.getId(pos2));
-						if(entry2 != null) {
+						if(fileLogic.linkEntryTo(session, session.get(pos), entry2.id))
 							System.out.println(audio.getCurrentTrack().getName() + " is now always next to " + entry2.getName());
-							session.get(pos).setForcedNext(entry2.id);
-						}
 						session.reorganize(true, session.getCurrent());
 					}
 				}
@@ -390,8 +389,8 @@ public class ConsoleUI {
 										TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
 										if(entry != null) {
 											if(remove) {
-												entry.inPlaylists.remove(playlist.id);
-												System.out.println(entry.getName() + " moved to " + to.getName());
+												if(fileLogic.removeSoundtrackFrom(entry, playlist))
+													System.out.println(entry.getName() + " moved to " + to.getName());
 											}
 											else System.out.println(entry.getName() + " copied to " + to.getName());
 											entry.inPlaylists.add(to.id);
@@ -403,11 +402,8 @@ public class ConsoleUI {
 								else {
 									for(DataPlaylistEntry dpe: removedTracks) {
 										TrackEntry entry = fileLogic.soundtracks.get(dpe.id.get());
-										if(entry != null) {
-											entry.inPlaylists.remove(playlist.id);
+										if(fileLogic.removeSoundtrackFrom(entry, playlist))
 											System.out.println(entry.getName() + " removed from " + playlist.getName());
-										}
-										playlist.remove(dpe);
 									}
 								}
 							}
@@ -424,7 +420,7 @@ public class ConsoleUI {
 										System.out.println("Cannot add Playlist to itself");
 									}
 									else 
-										playlist.addSubplaylist(subplaylist.id);
+										fileLogic.addSubplaylist(playlist, subplaylist.id);
 								}
 							}
 							else if(s.equals("removeplaylist") || s.equals("rmpl")) {
@@ -478,17 +474,12 @@ public class ConsoleUI {
 												else {
 													if(s.equals("setnext")) {
 														TrackEntry entry2 = fileLogic.soundtracks.get(playlist.getId(pos2));
-														if(entry2 != null) {
+														if(fileLogic.linkEntryTo(playlist, playlist.get(pos), entry.id))
 															System.out.println(entry.getName() + " is now always next to " + entry2.getName());
-															playlist.get(pos).setForcedNext(entry2.id);
-														}
 														playlist.reorganize();
 													}
 													else if(s.equals("moveto") || s.equals("mvto")) {
-														//TODO Hier funktioniert noch was nicht ganz
-														DataPlaylistEntry dpe = playlist.get(pos);
-														playlist.remove(pos);
-														playlist.addAt(pos2, dpe);
+														fileLogic.moveEntryTo(playlist, pos, pos2);
 														playlist.reorganize();
 													}
 												}
@@ -567,7 +558,7 @@ public class ConsoleUI {
 				}
 				else if(s.equals("shuffle")) {
 					if(audio.getCurrentSession() != null) {
-						audio.getCurrentSession().shuffle(true);
+						fileLogic.shuffle(audio.getCurrentSession(), true);
 						printPlaylistPreview();
 					}
 				}
@@ -670,7 +661,7 @@ public class ConsoleUI {
 								}
 							}
 						}
-						else if(s.equals("create")) {
+						else if(s.equals("create") || s.equals("playlist")) {
 							s = sc.nextLine().strip();
 							while(s.equals("")) {s = sc.nextLine().strip();}
 							try {
@@ -914,6 +905,22 @@ public class ConsoleUI {
 			s = sc.next();
 		} while(!(s.equals(till) || stop));
 		return ret;
+	}
+	@Override
+	public void resetAll() {
+		
+	}
+	@Override
+	public void onSoundtrackChange(String id) {
+		
+	}
+	@Override
+	public void onPlaylistChange(String id) {
+		
+	}
+	@Override
+	public void onSessionChange(String id) {
+		
 	}
 
 }

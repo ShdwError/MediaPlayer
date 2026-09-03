@@ -8,18 +8,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.mediaplayer.core.DataTypes.DataPlaylistEntry;
-
-import Tools.Files.Util;
-import Tools.Files.Data.DataAdapter;
-import Tools.Files.Data.DataType;
-import Tools.Files.Data.DataTypes.*;
+import Tools.Core.Files.Util;
+import Tools.Core.Files.Data.DataAdapter;
+import Tools.Core.Files.Data.DataType;
+import Tools.Core.Files.Data.DataTypes.*;
 
 public class Playlist extends DataAdapter {
 	public Path path;
 	public String id;
 	public DataString description;
-	public DataBoolean shuffle;
+	private DataBoolean shuffle; //IDK what dis does
 	private List<DataPlaylistEntry> playlist;
 	private List<DataString> subplaylists;
 	public Set<String> uniqueEntrySet;
@@ -34,6 +32,19 @@ public class Playlist extends DataAdapter {
 		this.subplaylists = new ArrayList<>();
 		this.uniqueEntrySet = new HashSet<>();
 		this.uniquePlaylistSet = new HashSet<>();
+	}
+	public Playlist(Path path, List<DataPlaylistEntry> playlist, List<String> subplaylists, String id) {
+		this.path = path;
+		this.id = id;
+		this.description = new DataString(); //TODO: in DTO?
+		this.shuffle = new DataBoolean();
+		this.playlist = new ArrayList<>();
+		this.subplaylists = new ArrayList<>();
+		this.uniqueEntrySet = new HashSet<>();
+		this.uniquePlaylistSet = new HashSet<>();
+		
+		this.add(playlist);
+		this.addSubplaylists(subplaylists);
 	}
 	public String getName() {
 		return Util.getNameAndType(Path.of("Playlists").relativize(path).toString())[0];
@@ -60,13 +71,13 @@ public class Playlist extends DataAdapter {
 		}
 	}
 	@SuppressWarnings("unlikely-arg-type")
-	public void remove(TrackEntry entry) {
-		playlist.remove(entry);
+	public boolean remove(TrackEntry entry) {
 		uniqueEntrySet.remove(entry.id);
+		return playlist.remove(entry);
 	}
-	public void remove(DataPlaylistEntry dpe) {
-		playlist.remove(dpe);
+	public boolean remove(DataPlaylistEntry dpe) {
 		uniqueEntrySet.remove(dpe.id.get());
+		return playlist.remove(dpe);
 	}
 	public DataPlaylistEntry remove(int i) {
 		DataPlaylistEntry dpe = playlist.remove(i);
@@ -74,14 +85,23 @@ public class Playlist extends DataAdapter {
 		return dpe;
 	}
 	public void set(int i, DataPlaylistEntry entry) {
-		playlist.set(i, entry);
+		if(!uniqueEntrySet.contains(entry.id.get())) {
+			uniqueEntrySet.add(entry.id.get());
+			playlist.set(i, entry);
+		}
 	}
 	public void set(List<DataPlaylistEntry> playlist) {
 		this.playlist.clear();
-		this.playlist.addAll(playlist);
+		this.add(playlist);
 	}
 	public DataPlaylistEntry get(int i) {
 		return playlist.get(i);
+	}
+	public DataPlaylistEntry get(String id) {
+		for(DataPlaylistEntry dpe: playlist)  {
+			if(dpe.id.get().equals(id)) return dpe;
+		}
+		return null;
 	}
 	public List<DataPlaylistEntry> get() {
 		return playlist;
@@ -117,10 +137,19 @@ public class Playlist extends DataAdapter {
 			subplaylists.add(new DataString(id));
 		}
 	}
+	public void addSubplaylists(List<String> subplaylists) {
+		for(String id: subplaylists) {
+			addSubplaylist(id);
+		}
+	}
 	public void removeSubplaylist(int pos) {
 		String id = subplaylists.get(pos).get();
-		subplaylists.remove(pos);
 		uniquePlaylistSet.remove(id);
+		subplaylists.remove(pos);
+	}
+	public boolean removeSubplaylist(String id) {
+		uniquePlaylistSet.remove(id);
+		return subplaylists.remove(new DataString(id));
 	}
 	public int size() {
 		return playlist.size();
@@ -186,6 +215,10 @@ public class Playlist extends DataAdapter {
 			return p.id.equals(this.id);
 		}
 		return super.equals(obj);
+	}
+	@Override
+	public String toString() {
+		return getName();
 	}
 
 	@Override

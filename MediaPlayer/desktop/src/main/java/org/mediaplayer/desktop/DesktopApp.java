@@ -2,10 +2,10 @@ package org.mediaplayer.desktop;
 
 import org.mediaplayer.core.Generics.GenericFileLogic;
 
+import Tools.Core.Files.Data.Exceptions.DataTypeException;
+
 import java.io.IOException;
 import java.nio.file.Path;
-
-import Tools.Files.Data.Exceptions.DataTypeException;
 
 public class DesktopApp {
 	public ConsoleUI ui;

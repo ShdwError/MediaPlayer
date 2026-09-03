@@ -2,7 +2,7 @@ package org.mediaplayer.core;
 
 import java.nio.file.Path;
 
-import Tools.Files.Util;
+import Tools.Core.Files.Util;
 
 public class UtilFunctions {
 	public static String getLengthString(int sec) {
